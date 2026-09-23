@@ -1,11 +1,11 @@
 # SignKo: Bidirectional Filipino Sign Language Translation System
 
-SignKo is a wearable hardware and mobile software ecosystem designed to facilitate real-time, bidirectional communication between Deaf and hard-of-hearing (DHH) Filipino Sign Language (FSL) users and non-signing hearing individuals. The system utilizes ESP32-based sensor gloves to recognize FSL gestures and a Flutter-based mobile application to process text, audio, and 3D avatar animations.
+SignKo is a wearable hardware and mobile software ecosystem designed to facilitate real-time, bidirectional communication between Deaf and hard-of-hearing (DHH) Filipino Sign Language (FSL) users and non-signing hearing individuals. The system utilizes ESP32-based sensor gloves to recognize FSL gestures and a Flutter-based mobile application to process text, audio, and visual FSL media.
 
 ## Key Features
 
 * **FSL to Text and Speech:** The wearable gloves capture finger flexion and hand orientation data. An embedded TinyML model classifies the data into FSL letters and numbers, transmitting the results via Bluetooth Low Energy (BLE) to the mobile application for text display and Text-to-Speech (TTS) output.
-* **Speech/Text to 3D FSL Avatar:** Non-signers can input text or use the device microphone via Speech-to-Text (STT). The application maps this input to a stored 3D avatar, playing the corresponding FSL gesture animation on the screen.
+* **Speech/Text to FSL Video/Image:** Non-signers can input text or use the device microphone via Speech-to-Text (STT). The application maps this input to a stored video or image database, playing the corresponding FSL gesture media on the screen.
 * **Haptic Alerts:** The mobile application triggers a vibration motor on the glove to notify the DHH user of incoming messages or detected speech.
 * **Edge Processing:** Gesture classification runs entirely on the ESP32 microcontroller using Edge Impulse, ensuring low latency and reduced power consumption by transmitting lightweight string data rather than raw sensor streams.
 * **Offline Functionality:** Core STT, TTS, and rendering engines utilize on-device libraries, allowing the system to operate without an active internet connection.
@@ -30,9 +30,9 @@ SignKo is a wearable hardware and mobile software ecosystem designed to facilita
 * **Hardware Bridge:** `flutter_blue_plus` package for persistent BLE client connections to the gloves.
 * **Local Storage:** Isar Database or Hive (embedded NoSQL) for storing offline FSL vocabulary dictionaries and app settings.
 
-### Media & Avatar Rendering
-* **3D Rendering Engine:** `flutter_3d_controller` embedded directly in the Flutter view hierarchy.
-* **Asset Pipeline:** Rigged humanoid models prepared in Blender, with keyframed FSL animations exported as Draco-compressed `.glb` or `.gltf` files.
+### Media Rendering
+* **Video/Image Engine:** `video_player` embedded directly in the Flutter view hierarchy for playback of FSL clips.
+* **Asset Pipeline:** Pre-recorded `.mp4` video clips and static `.png` images of human actors performing FSL gestures.
 * **Speech-to-Text (STT):** `speech_to_text` package invoking device-native offline transcription (Apple `SFSpeechRecognizer` and Android `SpeechRecognizer`).
 * **Text-to-Speech (TTS):** `flutter_tts` package utilizing native OS voice synthesizers for offline audio output.
 
@@ -45,7 +45,8 @@ signko/
 │   ├── src/                        # Main C++ source files (BLE, sensors, haptics)
 │   └── platformio.ini              # Build and dependency settings
 ├── app/                            # Flutter mobile application codebase
-│   ├── assets/3d_models/           # .glb files with baked FSL animations
+│   ├── assets/videos/              # .mp4 files of FSL gestures
+│   ├── assets/images/              # .png files of static FSL signs
 │   ├── lib/                        # Dart source code (Features, UI, Services)
 │   └── pubspec.yaml                # Flutter dependencies
 └── ml_pipeline/                    # Raw sensor datasets and Python data processing scripts
@@ -74,7 +75,7 @@ signko/
 2. Open the SignKo app on your mobile device and grant Bluetooth and Microphone permissions.
 3. Navigate to the **Connect** tab and select the gloves from the list of available BLE devices.
 4. Once the status indicates **Connected**, the DHH user can begin signing. Recognized FSL gestures will automatically appear in the chat view and play aloud.
-5. The hearing user can tap the microphone icon to speak. The app will transcribe the speech and trigger the 3D avatar to demonstrate the corresponding sign.
+5. The hearing user can tap the microphone icon to speak. The app will transcribe the speech and play the video or display the image of the corresponding FSL sign.
 
 ## Contributing
 Please refer to the [`.agentrules`](./.agentrules) file for general workspace guidelines, code quality expectations, and commit message conventions.

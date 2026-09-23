@@ -21,8 +21,8 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   
-  # 3D Rendering
-  flutter_3d_controller: ^1.2.1
+  # Video Rendering
+  video_player: ^2.8.2
   
   # STT and TTS
   speech_to_text: ^7.0.0
@@ -40,4 +40,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/3d_models/
+    - assets/videos/
+    - assets/images/
