@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart'; // TODO: Uncomment when building BLE logic
 
 /// A Riverpod provider to access the BleService instance globally
 final bleServiceProvider = Provider<BleService>((ref) {
