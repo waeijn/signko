@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'features/splash/splash_view.dart';
+
 void main() async {
   // Ensure Flutter bindings are initialized before calling async methods
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,31 +22,12 @@ class SignKoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SignKo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const HomeView(),
-    );
-  }
-}
-
-class HomeView extends StatelessWidget {
-  const HomeView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('SignKo'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: const Center(
-        child: Text(
-          'SignKo Bidirectional Translation',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-      ),
+      home: const SplashView(),
     );
   }
 }
