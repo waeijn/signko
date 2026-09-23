@@ -1,0 +1,43 @@
+---
+description: General guidelines and best practices for the workspace
+---
+
+# Workspace Rules
+
+## Code Quality
+
+- Write clean, concise, and maintainable code.
+- Provide appropriate comments and documentation for complex logic.
+- Follow standard naming conventions and formatting for the respective languages.
+
+## Workflow
+
+- Understand the existing codebase and context before making structural changes.
+- Prioritize simplicity and avoid over-engineering solutions.
+- Test changes thoroughly when applicable.
+
+## Communication
+
+- If a requirement or user request is ambiguous, ask for clarification.
+- Provide clear explanations for technical decisions when proposing large changes.
+
+## Version Control & Commits
+
+- **CRITICAL**: Do NOT `git add`, `git commit`, or `git push` any changes unless explicitly asked to do so by the user, or after the user has reviewed and confirmed the changes.
+- Follow Conventional Commits format (e.g., `feat:`, `fix:`, `docs:`, `chore:`).
+- Write concise but descriptive commit messages.
+- Keep commits focused on a single logical change.
+
+## Tech-Specific Guidelines
+
+### Flutter & Dart (Frontend)
+- Use **Riverpod** for state management.
+- Adhere to the official Dart style guide and use `flutter_lints` for formatting.
+- Keep UI components modular and separate business logic from the presentation layer.
+
+### C++ & PlatformIO (Embedded)
+- Write efficient, non-blocking C++ code suited for the ESP32 (e.g., using FreeRTOS tasks where appropriate).
+- Optimize memory and power consumption, especially when running BLE and ML inference concurrently.
+
+### Machine Learning (Edge Impulse / Python)
+- Focus on TinyML principles: keep models lightweight and optimized for time-series sensor data on edge devices.
