@@ -8,9 +8,9 @@ final bleServiceProvider = Provider<BleService>((ref) {
 
 class BleService {
   // TODO: Add methods to scan for ESP32 gloves
-  
+
   // TODO: Add methods to connect and discover GATT services
-  
+
   // TODO: Create a Stream to listen to incoming TinyML gesture classifications from the gloves
   Stream<String> get gestureStream {
     // Placeholder stream
