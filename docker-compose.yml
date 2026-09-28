@@ -9,4 +9,22 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://signko_user:secretpassword@db:5432/signko_db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: signko-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: signko_user
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: signko_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
