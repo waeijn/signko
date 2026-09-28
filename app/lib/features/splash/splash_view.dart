@@ -17,8 +17,8 @@ class SplashView extends StatelessWidget {
 
               // Logo Image
               Image.asset(
-                'assets/logo.png',
-                width: 250,
+                'assets/logo/logo.png',
+                width: 350, // Increased to account for the 512x512 transparent padding
                 fit: BoxFit.contain,
               ),
 

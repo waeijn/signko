@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
 
@@ -14,7 +15,7 @@ class AppTheme {
   static const Color _darkNavyCard = Color(0xFF1F2642); // Dark mode card
 
   static ThemeData get lightTheme {
-    return ThemeData(
+    final base = ThemeData(
       brightness: Brightness.light,
       primaryColor: _deepBlue,
       scaffoldBackgroundColor: _iceBlue,
@@ -37,10 +38,13 @@ class AppTheme {
         surfaceContainerHighest: Colors.white, // White cards on ice blue bg
       ),
     );
+    return base.copyWith(
+      textTheme: GoogleFonts.nunitoTextTheme(base.textTheme),
+    );
   }
 
   static ThemeData get darkTheme {
-    return ThemeData(
+    final base = ThemeData(
       brightness: Brightness.dark,
       primaryColor: _accentCyan,
       scaffoldBackgroundColor: _darkNavy,
@@ -63,6 +67,9 @@ class AppTheme {
         surfaceContainerHighest:
             Color(0xFF2A3357), // Slightly lighter dark navy for cards
       ),
+    );
+    return base.copyWith(
+      textTheme: GoogleFonts.nunitoTextTheme(base.textTheme),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../account/account_view.dart';
 
 enum TranslationMode { signToText, textToSign }
@@ -21,6 +23,7 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
   bool _isTranslating = false;
   bool _showVideoMock = false;
   String _lastSentText = '';
+  String? _videoUrl;
 
   @override
   void initState() {
@@ -38,6 +41,12 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
+    // Automatically mute/stop the microphone if it was listening when they hit send
+    if (_isListening) {
+      _speech.cancel(); // cancel() prevents the plugin from sending one last onResult callback
+      _isListening = false;
+    }
+
     FocusScope.of(context).unfocus();
     setState(() {
       _isTranslating = true;
@@ -46,13 +55,52 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
       _textController.clear();
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Connect to the local FastAPI backend (127.0.0.1 since we are on Web/Edge)
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/translate'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': 'signko_dev_api_key_998877', // Our secret API key
+        },
+        body: jsonEncode({'text': text}),
+      );
 
-    if (mounted) {
-      setState(() {
-        _isTranslating = false;
-        _showVideoMock = true;
-      });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final videoUrl = data['video_url'];
+
+        if (mounted) {
+          setState(() {
+            _videoUrl = videoUrl;
+            _isTranslating = false;
+            _showVideoMock = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully loaded video from database!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception('Failed to translate');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error connecting to backend: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTranslating = false;
+        });
+      }
     }
   }
 
@@ -61,7 +109,7 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
       bool available = await _speech.initialize(
         onStatus: (val) {
           if (val == 'done') {
-            setState(() => _isListening = false);
+            if (mounted) setState(() => _isListening = false);
           }
         },
         onError: (val) => print('onError: $val'),
@@ -69,14 +117,19 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
-          onResult: (val) => setState(() {
-            _textController.text = val.recognizedWords;
-          }),
+          onResult: (val) {
+            // Only update text if we are still actively listening
+            if (_isListening && mounted) {
+              setState(() {
+                _textController.text = val.recognizedWords;
+              });
+            }
+          },
         );
       }
     } else {
       setState(() => _isListening = false);
-      _speech.stop();
+      _speech.cancel(); // cancel() instead of stop() drops late callbacks
     }
   }
 
@@ -88,10 +141,16 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
         appBar: AppBar(
           elevation: 0,
           centerTitle: false,
-          title: Image.asset(
-            'assets/logo.png',
-            height: 32, // slightly smaller since it's on the left
-            fit: BoxFit.contain,
+          title: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: Transform.scale(
+              scale: 2.5, // Scales up the image to counteract the large 512x512 transparent padding
+              child: Image.asset(
+                'assets/logo/text.png',
+                height: 32, 
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
           actions: [
             IconButton(
@@ -172,20 +231,26 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
             if (_currentMode == TranslationMode.textToSign)
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
                   decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.1)),
+                          color: _isListening 
+                              ? Colors.red.withValues(alpha: 0.5) 
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.1),
+                          width: _isListening ? 2.0 : 1.0),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: _isListening 
+                              ? Colors.red.withValues(alpha: 0.15)
+                              : Colors.black.withValues(alpha: 0.05),
                           offset: const Offset(0, 4),
-                          blurRadius: 10,
+                          blurRadius: _isListening ? 15 : 10,
                         )
                       ]),
                   child: TextField(
@@ -355,11 +420,37 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                           .onSurface
                           .withValues(alpha: 0.1)),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.play_circle_fill,
-                    size: 64,
-                    color: Colors.grey,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.play_circle_fill,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
+                      if (_videoUrl != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'Backend Path:',
+                          style: TextStyle(
+                              color: Colors.grey.shade600, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            _videoUrl!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ]
+                    ],
                   ),
                 ),
               ),
