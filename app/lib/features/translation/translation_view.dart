@@ -4,6 +4,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../account/account_view.dart';
+import 'widgets/text_to_sign_panel.dart';
 
 enum TranslationMode { signToText, textToSign }
 
@@ -25,6 +26,7 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
   String _lastSentText = '';
   String? _mediaPath;
   String? _mediaType;
+  List<List<String>>? _mediaSequence;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -85,15 +87,19 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
         final data = jsonDecode(response.body);
         final mediaPath = data['media_path'];
         final mediaType = data['media_type'];
+        final mediaSequence = data['media_sequence'] != null 
+            ? (data['media_sequence'] as List).map((wordList) => List<String>.from(wordList)).toList()
+            : null;
 
         if (mounted) {
           setState(() {
             _mediaPath = mediaPath;
             _mediaType = mediaType;
+            _mediaSequence = mediaSequence;
             _isTranslating = false;
             _showVideoMock = true;
           });
-          debugPrint('Successfully loaded $mediaType from database: $mediaPath');
+          debugPrint('Successfully loaded $mediaType from database: ${mediaPath ?? mediaSequence}');
         }
       } else {
         throw Exception('Failed to translate');
@@ -238,8 +244,14 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
                         child: _currentMode == TranslationMode.signToText
                             ? _buildSignToTextContent(
                                 context) // Shows the translated text blocks
-                            : _buildTextToSignPlaceholder(
-                                context), // Shows the video player placeholder
+                            : TextToSignPanel(
+                                isTranslating: _isTranslating,
+                                showVideoMock: _showVideoMock,
+                                lastSentText: _lastSentText,
+                                mediaType: _mediaType,
+                                mediaPath: _mediaPath,
+                                mediaSequence: _mediaSequence,
+                              ),
                       ),
                     ),
                   ],
@@ -381,151 +393,7 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
     );
   }
 
-  Widget _buildTextToSignPlaceholder(BuildContext context) {
-    if (_isTranslating) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Translating...',
-              style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.5),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_showVideoMock) {
-      return Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  _lastSentText,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                height: 250,
-                width: 250,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.1)),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_mediaType == 'image' && _mediaPath != null)
-                        // If it's an image, show the image asset!
-                        Image.asset(
-                          _mediaPath!,
-                          height: 150,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.broken_image, size: 64, color: Colors.red),
-                        )
-                      else ...[
-                        // If it's a video, show the video placeholder (for now)
-                        const Icon(
-                          Icons.play_circle_fill,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
-                        if (_mediaPath != null) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            'Backend Video Path:',
-                            style: TextStyle(
-                                color: Colors.grey.shade600, fontSize: 12),
-                          ),
-                          const SizedBox(height: 4),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Text(
-                              _mediaPath!,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ]
-                      ]
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.05),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              height: 100,
-              width: 200,
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.05),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(100),
-                  topRight: Radius.circular(100),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+// Removed _buildTextToSignPlaceholder since it is now in TextToSignPanel
 
   Widget _buildSignToTextContent(BuildContext context) {
     return SingleChildScrollView(

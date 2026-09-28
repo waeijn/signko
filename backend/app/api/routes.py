@@ -15,14 +15,36 @@ def translate_text(request: TranslationRequest, db: Session = Depends(get_db), a
     # 2. Query the PostgreSQL database for a matching translation
     record = db.query(TranslationRecord).filter(TranslationRecord.source_text == text).first()
     
-    # 3. If found, return the mapped media. Otherwise, fallback to a default video.
-    media_path = record.media_path if record else "assets/videos/default.mp4"
-    media_type = record.media_type if record else "video"
+    # 3. If found, return the mapped media.
+    if record:
+        return TranslationResponse(
+            original_text=request.text,
+            media_path=record.media_path,
+            media_type=record.media_type
+        )
     
+    # 4. Fallback: Fingerspelling Sequence
+    # We split by spaces to handle multiple words, so they can be on new lines
+    words = text.split()
+    sequence = []
+    
+    for word in words:
+        clean_word = "".join([c for c in word if c.isalpha()])
+        if len(clean_word) > 0:
+            sequence.append([f"assets/images/alphabet/{c}.png" for c in clean_word])
+            
+    if len(sequence) > 0:
+        return TranslationResponse(
+            original_text=request.text,
+            media_type="sequence",
+            media_sequence=sequence
+        )
+        
+    # 5. Ultimate fallback if text is empty or non-alphabetical
     return TranslationResponse(
         original_text=request.text,
-        media_path=media_path,
-        media_type=media_type
+        media_path="assets/videos/default.mp4",
+        media_type="video"
     )
 
 @router.post("/seed", response_model=dict)
