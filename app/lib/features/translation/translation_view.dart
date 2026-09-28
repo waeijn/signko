@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../account/account_view.dart';
 import 'widgets/text_to_sign_panel.dart';
+import '../history/history_service.dart';
+import '../settings/settings_provider.dart';
 
 enum TranslationMode { signToText, textToSign }
 
@@ -64,6 +66,8 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
       _pulseController.reset();
     }
 
+    final settings = ref.read(settingsProvider);
+
     FocusScope.of(context).unfocus();
     setState(() {
       _isTranslating = true;
@@ -71,6 +75,14 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
       _lastSentText = text;
       _textController.clear();
     });
+
+    if (settings.saveHistory) {
+      HistoryService.saveHistory(TranslationHistoryItem(
+        text: text,
+        mode: _currentMode == TranslationMode.textToSign ? 'Text to Sign' : 'Sign to Text',
+        timestamp: DateTime.now(),
+      ));
+    }
 
     try {
       // Connect to the local FastAPI backend (127.0.0.1 since we are on Web/Edge)
@@ -244,13 +256,39 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
                         child: _currentMode == TranslationMode.signToText
                             ? _buildSignToTextContent(
                                 context) // Shows the translated text blocks
-                            : TextToSignPanel(
-                                isTranslating: _isTranslating,
-                                showVideoMock: _showVideoMock,
-                                lastSentText: _lastSentText,
-                                mediaType: _mediaType,
-                                mediaPath: _mediaPath,
-                                mediaSequence: _mediaSequence,
+                            : Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: TextToSignPanel(
+                                      isTranslating: _isTranslating,
+                                      showVideoMock: _showVideoMock,
+                                      lastSentText: _lastSentText,
+                                      mediaType: _mediaType,
+                                      mediaPath: _mediaPath,
+                                      mediaSequence: _mediaSequence,
+                                    ),
+                                  ),
+                                  if (_showVideoMock && !_isTranslating)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.refresh,
+                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                        ),
+                                        tooltip: 'Reset Translation',
+                                        onPressed: () {
+                                          setState(() {
+                                            _showVideoMock = false;
+                                            _lastSentText = '';
+                                            _mediaSequence = null;
+                                            _mediaPath = null;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                ],
                               ),
                       ),
                     ),

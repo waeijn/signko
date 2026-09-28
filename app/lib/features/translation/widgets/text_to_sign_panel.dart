@@ -60,6 +60,8 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (widget.isTranslating) {
       return Center(
         child: Column(
@@ -94,16 +96,16 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFEBF2FF), // Soft Accent Blue
+                color: isDark ? const Color(0xFF2A3357) : const Color(0xFFEBF2FF), // Soft Accent Blue
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF1E56F0).withValues(alpha: 0.1)),
+                border: Border.all(color: isDark ? Colors.transparent : const Color(0xFF1E56F0).withValues(alpha: 0.1)),
               ),
               child: Text(
                 widget.lastSentText,
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1E56F0), // Primary Royal Blue
+                  color: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0), // Primary Royal Blue
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -132,10 +134,12 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
                     onSelected: (selected) {
                       if (selected) setState(() => _selectedWordIndex = -1);
                     },
-                    selectedColor: const Color(0xFF1E56F0).withValues(alpha: 0.1),
-                    checkmarkColor: const Color(0xFF1E56F0),
+                    selectedColor: isDark ? const Color(0xFF42E8E0).withValues(alpha: 0.1) : const Color(0xFF1E56F0).withValues(alpha: 0.1),
+                    checkmarkColor: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0),
                     labelStyle: TextStyle(
-                      color: _selectedWordIndex == -1 ? const Color(0xFF1E56F0) : const Color(0xFF64748B),
+                      color: _selectedWordIndex == -1 
+                        ? (isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0)) 
+                        : (isDark ? Colors.white70 : const Color(0xFF64748B)),
                     ),
                   ),
                   ...List.generate(words.length, (index) {
@@ -154,10 +158,12 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
                       onSelected: (selected) {
                         if (selected) setState(() => _selectedWordIndex = index);
                       },
-                      selectedColor: const Color(0xFF1E56F0).withValues(alpha: 0.1),
-                      checkmarkColor: const Color(0xFF1E56F0),
+                      selectedColor: isDark ? const Color(0xFF42E8E0).withValues(alpha: 0.1) : const Color(0xFF1E56F0).withValues(alpha: 0.1),
+                      checkmarkColor: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0),
                       labelStyle: TextStyle(
-                        color: isSelected ? const Color(0xFF1E56F0) : const Color(0xFF64748B),
+                        color: isSelected 
+                          ? (isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0)) 
+                          : (isDark ? Colors.white70 : const Color(0xFF64748B)),
                       ),
                     );
                   }),
@@ -173,9 +179,9 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
               width: double.infinity,
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF1F2642) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                border: Border.all(color: isDark ? const Color(0xFF2A3357) : const Color(0xFFE2E8F0), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.03),
@@ -205,7 +211,7 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
                         constraints: BoxConstraints(
                           maxWidth: MediaQuery.of(context).size.width - 64,
                         ),
-                        child: _buildSignDisplayContent(words),
+                        child: _buildSignDisplayContent(words, isDark),
                       ),
                     ),
                   ),
@@ -225,15 +231,15 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: const Color(0xFFF8FAFC),
+            backgroundColor: isDark ? const Color(0xFF2A3357) : const Color(0xFFF8FAFC),
           ),
           const SizedBox(height: 16),
           Container(
             height: 100,
             width: 200,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A3357) : const Color(0xFFF8FAFC),
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(100),
                 topRight: Radius.circular(100),
               ),
@@ -244,7 +250,7 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
     );
   }
 
-  Widget _buildSignDisplayContent(List<String> words) {
+  Widget _buildSignDisplayContent(List<String> words, bool isDark) {
     // SINGLE WORD MODE
     if (_selectedWordIndex != -1) {
       final word = words[_selectedWordIndex];
@@ -255,7 +261,7 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
       
       final cleanLetters = word.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase().split('');
       final paths = cleanLetters.map((c) => 'assets/images/alphabet/$c.png').toList();
-      return _buildWordGroup(paths);
+      return _buildWordGroup(paths, isDark: isDark);
       // }
     }
 
@@ -271,7 +277,7 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
           if (cleanLetters.isEmpty || cleanLetters[0].isEmpty) return const SizedBox.shrink();
           
           final paths = cleanLetters.map((c) => 'assets/images/alphabet/$c.png').toList();
-          return _buildWordGroup(paths, isGrouped: true, wordIndex: index);
+          return _buildWordGroup(paths, isGrouped: true, wordIndex: index, isDark: isDark);
         }),
       );
     } else if (widget.mediaType == 'image' && widget.mediaPath != null) {
@@ -285,22 +291,22 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
       );
     } else {
       // Entire phrase returned a video
-      return _buildVideoPlaceholder(widget.lastSentText);
+      return _buildVideoPlaceholder(widget.lastSentText, isDark);
     }
   }
 
   // Renders a single word's letters in a Wrap
-  Widget _buildWordGroup(List<String> paths, {bool isGrouped = false, int? wordIndex}) {
+  Widget _buildWordGroup(List<String> paths, {bool isGrouped = false, int? wordIndex, required bool isDark}) {
     final wrapWidget = Wrap(
       alignment: WrapAlignment.center,
       spacing: 10,
       runSpacing: 12,
-      children: paths.map((path) => _buildCharacterCard(path)).toList(),
+      children: paths.map((path) => _buildCharacterCard(path, isDark)).toList(),
     );
 
     if (isGrouped) {
       return Material(
-        color: const Color(0xFFF8FAFC),
+        color: isDark ? const Color(0xFF141A31) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: wordIndex != null ? () {
@@ -313,7 +319,7 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? const Color(0xFF2A3357) : const Color(0xFFE2E8F0)),
             ),
             child: wrapWidget,
           ),
@@ -325,7 +331,7 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
   }
 
   // Renders the individual Image + Character Pill
-  Widget _buildCharacterCard(String path) {
+  Widget _buildCharacterCard(String path, bool isDark) {
     final letter = _extractLetter(path);
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -341,13 +347,13 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E56F0),
+            color: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             letter,
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF141A31) : Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -357,16 +363,16 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
     );
   }
 
-  Widget _buildVideoPlaceholder(String word) {
+  Widget _buildVideoPlaceholder(String word, bool isDark) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.play_circle_fill, size: 80, color: Color(0xFF1E56F0)),
+        Icon(Icons.play_circle_fill, size: 80, color: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0)),
         const SizedBox(height: 16),
         Text(
           'Dynamic Video:',
-          style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14),
+          style: GoogleFonts.poppins(color: isDark ? Colors.white54 : const Color(0xFF64748B), fontSize: 14),
         ),
         const SizedBox(height: 4),
         Padding(
@@ -375,7 +381,7 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
             word.toUpperCase(),
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              color: const Color(0xFF1E56F0),
+              color: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0),
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),

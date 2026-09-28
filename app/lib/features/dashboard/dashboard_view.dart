@@ -14,19 +14,17 @@ class DashboardView extends StatefulWidget {
 class _DashboardViewState extends State<DashboardView> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    TranslationView(),
-    GlovesView(),
-    HistoryView(),
-    SettingsView(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: [
+          const TranslationView(),
+          const GlovesView(),
+          _currentIndex == 2 ? const HistoryView() : const SizedBox.shrink(),
+          const SettingsView(),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         elevation: 8,
