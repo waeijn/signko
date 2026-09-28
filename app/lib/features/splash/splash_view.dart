@@ -13,13 +13,18 @@ class SplashView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Spacer(flex: 4),
+              const Spacer(flex: 2),
 
-              // Logo Image
-              Image.asset(
-                'assets/logo.png',
-                width: 250,
-                fit: BoxFit.contain,
+              // Logo Image (Flexible prevents vertical overflow on small screens)
+              Flexible(
+                flex: 6,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Image.asset(
+                    'assets/logo/logo.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
 
               const Spacer(flex: 3),

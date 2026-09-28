@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../account/account_view.dart';
+import 'widgets/text_to_sign_panel.dart';
+import '../history/history_service.dart';
+import '../settings/settings_provider.dart';
 
 enum TranslationMode { signToText, textToSign }
 
@@ -12,7 +17,7 @@ class TranslationView extends ConsumerStatefulWidget {
   ConsumerState<TranslationView> createState() => _TranslationViewState();
 }
 
-class _TranslationViewState extends ConsumerState<TranslationView> {
+class _TranslationViewState extends ConsumerState<TranslationView> with SingleTickerProviderStateMixin {
   TranslationMode _currentMode = TranslationMode.signToText;
   final TextEditingController _textController = TextEditingController();
   late stt.SpeechToText _speech;
@@ -21,15 +26,30 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
   bool _isTranslating = false;
   bool _showVideoMock = false;
   String _lastSentText = '';
+  String? _mediaPath;
+  String? _mediaType;
+  List<List<String>>? _mediaSequence;
+
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
+    
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
+    _pulseController.dispose();
     _textController.dispose();
     super.dispose();
   }
@@ -37,6 +57,16 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
   void _handleSend() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+
+    // Automatically mute/stop the microphone if it was listening when they hit send
+    if (_isListening) {
+      _speech.cancel(); // cancel() prevents the plugin from sending one last onResult callback
+      _isListening = false;
+      _pulseController.stop();
+      _pulseController.reset();
+    }
+
+    final settings = ref.read(settingsProvider);
 
     FocusScope.of(context).unfocus();
     setState(() {
@@ -46,13 +76,61 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
       _textController.clear();
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    if (settings.saveHistory) {
+      HistoryService.saveHistory(TranslationHistoryItem(
+        text: text,
+        mode: _currentMode == TranslationMode.textToSign ? 'Text to Sign' : 'Sign to Text',
+        timestamp: DateTime.now(),
+      ));
+    }
 
-    if (mounted) {
-      setState(() {
-        _isTranslating = false;
-        _showVideoMock = true;
-      });
+    try {
+      // Connect to the local FastAPI backend (127.0.0.1 since we are on Web/Edge)
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/translate'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': 'signko_dev_api_key_998877', // Our secret API key
+        },
+        body: jsonEncode({'text': text}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final mediaPath = data['media_path'];
+        final mediaType = data['media_type'];
+        final mediaSequence = data['media_sequence'] != null 
+            ? (data['media_sequence'] as List).map((wordList) => List<String>.from(wordList)).toList()
+            : null;
+
+        if (mounted) {
+          setState(() {
+            _mediaPath = mediaPath;
+            _mediaType = mediaType;
+            _mediaSequence = mediaSequence;
+            _isTranslating = false;
+            _showVideoMock = true;
+          });
+          debugPrint('Successfully loaded $mediaType from database: ${mediaPath ?? mediaSequence}');
+        }
+      } else {
+        throw Exception('Failed to translate');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error connecting to backend: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTranslating = false;
+        });
+      }
     }
   }
 
@@ -61,22 +139,34 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
       bool available = await _speech.initialize(
         onStatus: (val) {
           if (val == 'done') {
-            setState(() => _isListening = false);
+            if (mounted) {
+              setState(() => _isListening = false);
+              _pulseController.stop();
+              _pulseController.reset();
+            }
           }
         },
         onError: (val) => print('onError: $val'),
       );
       if (available) {
         setState(() => _isListening = true);
+        _pulseController.repeat(reverse: true);
         _speech.listen(
-          onResult: (val) => setState(() {
-            _textController.text = val.recognizedWords;
-          }),
+          onResult: (val) {
+            // Only update text if we are still actively listening
+            if (_isListening && mounted) {
+              setState(() {
+                _textController.text = val.recognizedWords;
+              });
+            }
+          },
         );
       }
     } else {
       setState(() => _isListening = false);
-      _speech.stop();
+      _pulseController.stop();
+      _pulseController.reset();
+      _speech.cancel(); // cancel() instead of stop() drops late callbacks
     }
   }
 
@@ -88,10 +178,16 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
         appBar: AppBar(
           elevation: 0,
           centerTitle: false,
-          title: Image.asset(
-            'assets/logo.png',
-            height: 32, // slightly smaller since it's on the left
-            fit: BoxFit.contain,
+          title: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: Transform.scale(
+              scale: 2.5, // Scales up the image to counteract the large 512x512 transparent padding
+              child: Image.asset(
+                'assets/logo/text.png',
+                height: 32, 
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
           actions: [
             IconButton(
@@ -160,8 +256,40 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                         child: _currentMode == TranslationMode.signToText
                             ? _buildSignToTextContent(
                                 context) // Shows the translated text blocks
-                            : _buildTextToSignPlaceholder(
-                                context), // Shows the video player placeholder
+                            : Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: TextToSignPanel(
+                                      isTranslating: _isTranslating,
+                                      showVideoMock: _showVideoMock,
+                                      lastSentText: _lastSentText,
+                                      mediaType: _mediaType,
+                                      mediaPath: _mediaPath,
+                                      mediaSequence: _mediaSequence,
+                                    ),
+                                  ),
+                                  if (_showVideoMock && !_isTranslating)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.refresh,
+                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                        ),
+                                        tooltip: 'Reset Translation',
+                                        onPressed: () {
+                                          setState(() {
+                                            _showVideoMock = false;
+                                            _lastSentText = '';
+                                            _mediaSequence = null;
+                                            _mediaPath = null;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                ],
+                              ),
                       ),
                     ),
                   ],
@@ -178,9 +306,10 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
                           color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.1)),
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.1),
+                          width: 1.0),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),
@@ -196,7 +325,10 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                       hintText: _isListening
                           ? 'Listening...'
                           : 'Type something here...',
-                      hintStyle: TextStyle(color: Colors.grey.shade500),
+                      hintStyle: TextStyle(
+                          color: _isListening
+                              ? Colors.red.withValues(alpha: 0.7)
+                              : Colors.grey.shade500),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 16),
@@ -205,14 +337,19 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: Icon(
-                                _isListening ? Icons.mic_off : Icons.mic,
-                                color: _isListening
-                                    ? Colors.red
-                                    : Theme.of(context).colorScheme.primary,
+                            ScaleTransition(
+                              scale: _isListening 
+                                  ? _pulseAnimation 
+                                  : const AlwaysStoppedAnimation(1.0),
+                              child: IconButton(
+                                icon: Icon(
+                                  _isListening ? Icons.mic : Icons.mic_none,
+                                  color: _isListening
+                                      ? Colors.red
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                                onPressed: _listen,
                               ),
-                              onPressed: _listen,
                             ),
                             IconButton(
                               icon: Icon(
@@ -294,113 +431,7 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
     );
   }
 
-  Widget _buildTextToSignPlaceholder(BuildContext context) {
-    if (_isTranslating) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Translating...',
-              style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.5),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_showVideoMock) {
-      return Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  _lastSentText,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                height: 250,
-                width: 250,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.1)),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.play_circle_fill,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.05),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              height: 100,
-              width: 200,
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.05),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(100),
-                  topRight: Radius.circular(100),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+// Removed _buildTextToSignPlaceholder since it is now in TextToSignPanel
 
   Widget _buildSignToTextContent(BuildContext context) {
     return SingleChildScrollView(

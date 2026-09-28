@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../theme/app_theme.dart';
+import 'settings_provider.dart';
 
 class SettingsView extends ConsumerWidget {
   const SettingsView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeProvider);
-    final isDarkMode = themeMode == ThemeMode.dark;
+    final settings = ref.watch(settingsProvider);
+    final settingsNotifier = ref.read(settingsProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -27,13 +27,14 @@ class SettingsView extends ConsumerWidget {
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
           _buildSwitchTile(
-              context, 'Auto-translate Sign to Text', true, (v) {}),
-          _buildSwitchTile(
-              context, 'Speak translations aloud (TTS)', true, (v) {}),
-          _buildSwitchTile(context, 'Save translation history', true, (v) {}),
-          _buildSwitchTile(context, 'Dark Mode', isDarkMode, (v) {
-            ref.read(themeModeProvider.notifier).state =
-                v ? ThemeMode.dark : ThemeMode.light;
+              context, 'Auto-translate Sign to Text', settings.autoTranslate, (v) {
+            settingsNotifier.toggleAutoTranslate(v);
+          }),
+          _buildSwitchTile(context, 'Save translation history', settings.saveHistory, (v) {
+            settingsNotifier.toggleSaveHistory(v);
+          }),
+          _buildSwitchTile(context, 'Dark Mode', settings.isDarkMode, (v) {
+            settingsNotifier.toggleDarkMode(v);
           }),
           const SizedBox(height: 32),
           const Text('HARDWARE',

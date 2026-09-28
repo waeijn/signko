@@ -1,6 +1,6 @@
 name: signko_app
 description: "Bidirectional Filipino Sign Language Translation System"
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -10,26 +10,30 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   # State Management
   flutter_riverpod: ^2.5.1
-  
+
   # Bluetooth Low Energy
   flutter_blue_plus: ^1.31.14
-  
+
   # Local Storage
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  
+
   # Video Rendering
   video_player: ^2.8.2
-  
+
   # STT and TTS
   speech_to_text: ^7.0.0
   flutter_tts: ^4.2.5
-  
+
   # UI and Utilities
   cupertino_icons: ^1.0.8
+  google_fonts: ^8.2.1
+  http: ^1.6.0
+  shared_preferences: ^2.5.5
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
@@ -40,6 +44,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/logo.png
     - assets/videos/
+    - assets/logo/
     - assets/images/
+    - assets/images/alphabet/
+    - assets/images/numbers/
