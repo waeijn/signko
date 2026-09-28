@@ -14,7 +14,7 @@ class TranslationView extends ConsumerStatefulWidget {
   ConsumerState<TranslationView> createState() => _TranslationViewState();
 }
 
-class _TranslationViewState extends ConsumerState<TranslationView> {
+class _TranslationViewState extends ConsumerState<TranslationView> with SingleTickerProviderStateMixin {
   TranslationMode _currentMode = TranslationMode.signToText;
   final TextEditingController _textController = TextEditingController();
   late stt.SpeechToText _speech;
@@ -23,16 +23,29 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
   bool _isTranslating = false;
   bool _showVideoMock = false;
   String _lastSentText = '';
-  String? _videoUrl;
+  String? _mediaPath;
+  String? _mediaType;
+
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
+    
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
+    _pulseController.dispose();
     _textController.dispose();
     super.dispose();
   }
@@ -45,6 +58,8 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
     if (_isListening) {
       _speech.cancel(); // cancel() prevents the plugin from sending one last onResult callback
       _isListening = false;
+      _pulseController.stop();
+      _pulseController.reset();
     }
 
     FocusScope.of(context).unfocus();
@@ -68,20 +83,17 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final videoUrl = data['video_url'];
+        final mediaPath = data['media_path'];
+        final mediaType = data['media_type'];
 
         if (mounted) {
           setState(() {
-            _videoUrl = videoUrl;
+            _mediaPath = mediaPath;
+            _mediaType = mediaType;
             _isTranslating = false;
             _showVideoMock = true;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Successfully loaded video from database!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          debugPrint('Successfully loaded $mediaType from database: $mediaPath');
         }
       } else {
         throw Exception('Failed to translate');
@@ -109,13 +121,18 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
       bool available = await _speech.initialize(
         onStatus: (val) {
           if (val == 'done') {
-            if (mounted) setState(() => _isListening = false);
+            if (mounted) {
+              setState(() => _isListening = false);
+              _pulseController.stop();
+              _pulseController.reset();
+            }
           }
         },
         onError: (val) => print('onError: $val'),
       );
       if (available) {
         setState(() => _isListening = true);
+        _pulseController.repeat(reverse: true);
         _speech.listen(
           onResult: (val) {
             // Only update text if we are still actively listening
@@ -129,6 +146,8 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
       }
     } else {
       setState(() => _isListening = false);
+      _pulseController.stop();
+      _pulseController.reset();
       _speech.cancel(); // cancel() instead of stop() drops late callbacks
     }
   }
@@ -231,26 +250,21 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
             if (_currentMode == TranslationMode.textToSign)
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
+                child: Container(
                   decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
-                          color: _isListening 
-                              ? Colors.red.withValues(alpha: 0.5) 
-                              : Theme.of(context)
+                          color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
                                   .withValues(alpha: 0.1),
-                          width: _isListening ? 2.0 : 1.0),
+                          width: 1.0),
                       boxShadow: [
                         BoxShadow(
-                          color: _isListening 
-                              ? Colors.red.withValues(alpha: 0.15)
-                              : Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           offset: const Offset(0, 4),
-                          blurRadius: _isListening ? 15 : 10,
+                          blurRadius: 10,
                         )
                       ]),
                   child: TextField(
@@ -261,7 +275,10 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                       hintText: _isListening
                           ? 'Listening...'
                           : 'Type something here...',
-                      hintStyle: TextStyle(color: Colors.grey.shade500),
+                      hintStyle: TextStyle(
+                          color: _isListening
+                              ? Colors.red.withValues(alpha: 0.7)
+                              : Colors.grey.shade500),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 16),
@@ -270,14 +287,19 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: Icon(
-                                _isListening ? Icons.mic_off : Icons.mic,
-                                color: _isListening
-                                    ? Colors.red
-                                    : Theme.of(context).colorScheme.primary,
+                            ScaleTransition(
+                              scale: _isListening 
+                                  ? _pulseAnimation 
+                                  : const AlwaysStoppedAnimation(1.0),
+                              child: IconButton(
+                                icon: Icon(
+                                  _isListening ? Icons.mic : Icons.mic_none,
+                                  color: _isListening
+                                      ? Colors.red
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                                onPressed: _listen,
                               ),
-                              onPressed: _listen,
                             ),
                             IconButton(
                               icon: Icon(
@@ -424,31 +446,43 @@ class _TranslationViewState extends ConsumerState<TranslationView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.play_circle_fill,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                      if (_videoUrl != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          'Backend Path:',
-                          style: TextStyle(
-                              color: Colors.grey.shade600, fontSize: 12),
+                      if (_mediaType == 'image' && _mediaPath != null)
+                        // If it's an image, show the image asset!
+                        Image.asset(
+                          _mediaPath!,
+                          height: 150,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.broken_image, size: 64, color: Colors.red),
+                        )
+                      else ...[
+                        // If it's a video, show the video placeholder (for now)
+                        const Icon(
+                          Icons.play_circle_fill,
+                          size: 64,
+                          color: Colors.grey,
                         ),
-                        const SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            _videoUrl!,
-                            textAlign: TextAlign.center,
+                        if (_mediaPath != null) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            'Backend Video Path:',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                                color: Colors.grey.shade600, fontSize: 12),
+                          ),
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              _mediaPath!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                        ),
+                        ]
                       ]
                     ],
                   ),

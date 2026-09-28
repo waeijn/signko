@@ -15,12 +15,14 @@ def translate_text(request: TranslationRequest, db: Session = Depends(get_db), a
     # 2. Query the PostgreSQL database for a matching translation
     record = db.query(TranslationRecord).filter(TranslationRecord.source_text == text).first()
     
-    # 3. If found, return the mapped video. Otherwise, fallback to a default video.
-    video_url = record.video_url if record else "assets/videos/default.mp4"
+    # 3. If found, return the mapped media. Otherwise, fallback to a default video.
+    media_path = record.media_path if record else "assets/videos/default.mp4"
+    media_type = record.media_type if record else "video"
     
     return TranslationResponse(
         original_text=request.text,
-        video_url=video_url
+        media_path=media_path,
+        media_type=media_type
     )
 
 @router.post("/seed", response_model=dict)
@@ -35,7 +37,8 @@ def add_translation(translation: TranslationCreate, db: Session = Depends(get_db
 
     new_record = TranslationRecord(
         source_text=translation.source_text.lower().strip(),
-        video_url=translation.video_url
+        media_path=translation.media_path,
+        media_type=translation.media_type
     )
     db.add(new_record)
     db.commit()

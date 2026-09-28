@@ -6,4 +6,5 @@ class TranslationRecord(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     source_text = Column(String, unique=True, index=True, nullable=False)
-    video_url = Column(String, nullable=False)
+    media_path = Column(String, nullable=False)
+    media_type = Column(String, nullable=False, default="video") # "video" or "image"

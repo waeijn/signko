@@ -31,6 +31,7 @@ dependencies:
   # UI and Utilities
   cupertino_icons: ^1.0.8
   google_fonts: ^8.2.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -44,3 +45,5 @@ flutter:
     - assets/videos/
     - assets/logo/
     - assets/images/
+    - assets/images/alphabet/
+    - assets/images/numbers/

@@ -5,8 +5,10 @@ class TranslationRequest(BaseModel):
 
 class TranslationResponse(BaseModel):
     original_text: str
-    video_url: str
+    media_path: str
+    media_type: str
 
 class TranslationCreate(BaseModel):
     source_text: str
-    video_url: str
+    media_path: str
+    media_type: str = "video"
