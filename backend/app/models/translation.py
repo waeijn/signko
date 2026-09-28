@@ -1,10 +1,7 @@
 from sqlalchemy import Column, Integer, String
-from database import Base
+from app.core.database import Base
 
 class TranslationRecord(Base):
-    """
-    A database table that maps a specific word or sentence to a video file.
-    """
     __tablename__ = "translations"
 
     id = Column(Integer, primary_key=True, index=True)

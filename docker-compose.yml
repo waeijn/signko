@@ -4,12 +4,15 @@ services:
   backend:
     build: ./backend
     container_name: signko-backend
+    restart: always
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://signko_user:secretpassword@db:5432/signko_db
+      - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     depends_on:
       - db
 
@@ -17,10 +20,8 @@ services:
     image: postgres:15-alpine
     container_name: signko-postgres
     restart: always
-    environment:
-      POSTGRES_USER: signko_user
-      POSTGRES_PASSWORD: secretpassword
-      POSTGRES_DB: signko_db
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
