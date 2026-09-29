@@ -1,12 +1,132 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'settings_provider.dart';
 
-class SettingsView extends ConsumerWidget {
+class VoiceOption {
+  final String label;
+  final Map<String, String> rawVoice;
+
+  VoiceOption({required this.label, required this.rawVoice});
+}
+
+class SettingsView extends ConsumerStatefulWidget {
   const SettingsView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends ConsumerState<SettingsView> {
+  final FlutterTts _flutterTts = FlutterTts();
+  List<VoiceOption> _voiceOptions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVoices();
+  }
+
+  Future<void> _fetchVoices() async {
+    try {
+      final voices = await _flutterTts.getVoices;
+      if (voices == null) return;
+      
+      final List<Map<String, String>> parsedVoices = [];
+      for (var voice in voices) {
+        if (voice is Map) {
+          parsedVoices.add({
+            'name': voice['name']?.toString() ?? '',
+            'locale': voice['locale']?.toString() ?? '',
+          });
+        }
+      }
+      
+      // 1. Locale Filter: en-us
+      parsedVoices.removeWhere((v) {
+        if (v['name']!.isEmpty) return true;
+        final loc = v['locale']!.toLowerCase().replaceAll('_', '-');
+        return loc != 'en-us';
+      });
+
+      // 2. Offline Priority
+      var offlineVoices = parsedVoices.where((v) {
+        final name = v['name']!.toLowerCase();
+        return name.contains('local') || !name.contains('network');
+      }).toList();
+      
+      if (offlineVoices.isEmpty) {
+        offlineVoices = parsedVoices;
+      }
+
+      // 3. Gender & Acoustic Code Curating
+      final femaleIds = ['sfg', 'tpf', 'iob', 'tpc', 'female', 'zira', 'aria', 'samantha', 'karen', 'victoria'];
+      final maleIds = ['iom', 'tpd', 'iol', 'sfb', 'male', 'david', 'mark', 'aaron', 'arthur', 'fred'];
+      
+      List<VoiceOption> curated = [];
+      
+      final Map<String, String> femaleLabels = {
+        'Female • Soft': '',
+        'Female • Crisp': '',
+      };
+      final Map<String, String> maleLabels = {
+        'Male • Deep': '',
+        'Male • Clear': '',
+      };
+
+      for (var v in offlineVoices) {
+        final name = v['name']!.toLowerCase();
+        
+        bool isFemale = false;
+        bool isMale = false;
+
+        // Ensure 'male' does not accidentally match 'female'
+        if (femaleIds.any((id) => name.contains(id))) {
+          isFemale = true;
+        } else if (maleIds.any((id) => name.replaceAll('female', '').contains(id))) {
+          isMale = true;
+        }
+
+        if (isFemale && femaleLabels.isNotEmpty) {
+          final label = femaleLabels.keys.first;
+          femaleLabels.remove(label);
+          curated.add(VoiceOption(label: label, rawVoice: v));
+        } else if (isMale && maleLabels.isNotEmpty) {
+          final label = maleLabels.keys.first;
+          maleLabels.remove(label);
+          curated.add(VoiceOption(label: label, rawVoice: v));
+        }
+        
+        if (curated.length >= 4) break;
+      }
+
+      // 4. OEM Fallback
+      if (curated.isEmpty) {
+        for (int i = 0; i < offlineVoices.length && i < 4; i++) {
+          curated.add(VoiceOption(label: 'English (US) • Voice ${i + 1}', rawVoice: offlineVoices[i]));
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _voiceOptions = curated;
+        });
+
+        // Automatically set the first curated voice as the active default upon initialization
+        final settingsNotifier = ref.read(settingsProvider.notifier);
+        final currentVoice = ref.read(settingsProvider).ttsVoice;
+        
+        if (curated.isNotEmpty && (currentVoice == null || !curated.any((opt) => opt.rawVoice['name'] == currentVoice))) {
+          settingsNotifier.setTtsVoice(curated.first.rawVoice['name']!);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching TTS voices: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
 
@@ -30,6 +150,76 @@ class SettingsView extends ConsumerWidget {
               context, 'Auto-translate Sign to Text', settings.autoTranslate, (v) {
             settingsNotifier.toggleAutoTranslate(v);
           }),
+          _buildSwitchTile(
+              context, 'Speak translations aloud (TTS)', settings.speakTranslations, (v) {
+            settingsNotifier.toggleSpeakTranslations(v);
+            if (!v) {
+              _flutterTts.stop();
+            }
+          }),
+          
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            child: settings.speakTranslations && _voiceOptions.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.volume_up_outlined, color: Colors.grey.shade500, size: 20),
+                            const SizedBox(width: 12),
+                            const Text('Voice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          height: 36, // Compact height matching standard switches
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEBF2FF),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _voiceOptions.any((o) => o.rawVoice['name'] == settings.ttsVoice)
+                                  ? settings.ttsVoice
+                                  : _voiceOptions.first.rawVoice['name'],
+                              icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF1E56F0), size: 20),
+                              style: const TextStyle(
+                                color: Color(0xFF1E56F0),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              dropdownColor: const Color(0xFFEBF2FF),
+                              borderRadius: BorderRadius.circular(16),
+                              alignment: AlignmentDirectional.centerEnd,
+                              items: _voiceOptions.map((option) {
+                                return DropdownMenuItem<String>(
+                                  value: option.rawVoice['name'],
+                                  child: Text(option.label),
+                                );
+                              }).toList(),
+                              onChanged: (String? newName) async {
+                                if (newName != null && newName != settings.ttsVoice) {
+                                  settingsNotifier.setTtsVoice(newName);
+                                  final option = _voiceOptions.firstWhere((o) => o.rawVoice['name'] == newName);
+                                  await _flutterTts.stop();
+                                  await Future.delayed(const Duration(milliseconds: 100));
+                                  await _flutterTts.setVoice({"name": option.rawVoice['name']!, "locale": option.rawVoice['locale']!});
+                                  await _flutterTts.speak("Hello, voice selected.");
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+
           _buildSwitchTile(context, 'Save translation history', settings.saveHistory, (v) {
             settingsNotifier.toggleSaveHistory(v);
           }),
