@@ -71,9 +71,11 @@ class AccountView extends ConsumerWidget {
             // Account Options
             _buildAccountOption(context, Icons.person_outline, 'Edit Profile'),
             const Divider(),
-            _buildAccountOption(context, Icons.notifications_outlined, 'Notifications'),
+            _buildAccountOption(
+                context, Icons.notifications_outlined, 'Notifications'),
             const Divider(),
-            _buildAccountOption(context, Icons.lock_outline, 'Privacy & Security'),
+            _buildAccountOption(
+                context, Icons.lock_outline, 'Privacy & Security'),
             const Divider(),
             _buildAccountOption(context, Icons.help_outline, 'Help & Support'),
             const Divider(),
@@ -100,12 +102,14 @@ class AccountView extends ConsumerWidget {
                             await ref.read(authProvider.notifier).logout();
                             if (context.mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(builder: (_) => const LoginView()),
+                                MaterialPageRoute(
+                                    builder: (_) => const LoginView()),
                                 (route) => false,
                               );
                             }
                           },
-                          child: const Text('Log Out', style: TextStyle(color: Colors.red)),
+                          child: const Text('Log Out',
+                              style: TextStyle(color: Colors.red)),
                         ),
                       ],
                     ),
@@ -132,7 +136,8 @@ class AccountView extends ConsumerWidget {
     );
   }
 
-  Widget _buildAccountOption(BuildContext context, IconData icon, String title) {
+  Widget _buildAccountOption(
+      BuildContext context, IconData icon, String title) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
