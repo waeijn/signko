@@ -29,7 +29,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
   Future<void> _fetchVoices() async {
     try {
-      final voices = await _flutterTts.getVoices;
+      var voices = await _flutterTts.getVoices;
+      
+      // Web workaround: Wait for browser's SpeechSynthesis to populate voices asynchronously
+      if ((voices == null || (voices is List && voices.isEmpty)) && mounted) {
+        await Future.delayed(const Duration(milliseconds: 1500));
+        voices = await _flutterTts.getVoices;
+      }
+
       if (voices == null) return;
       
       final List<Map<String, String>> parsedVoices = [];
@@ -42,21 +49,25 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         }
       }
       
-      // 1. Locale Filter: en-us
-      parsedVoices.removeWhere((v) {
-        if (v['name']!.isEmpty) return true;
+      // 1. Locale Filter: Broaden to ANY English to prevent vanishing on en-GB or similar browsers
+      var englishVoices = parsedVoices.where((v) {
+        if (v['name']!.isEmpty) return false;
         final loc = v['locale']!.toLowerCase().replaceAll('_', '-');
-        return loc != 'en-us';
-      });
+        return loc.startsWith('en');
+      }).toList();
+
+      if (englishVoices.isEmpty) {
+        englishVoices = parsedVoices; // Fallback to all voices if no English
+      }
 
       // 2. Offline Priority
-      var offlineVoices = parsedVoices.where((v) {
+      var offlineVoices = englishVoices.where((v) {
         final name = v['name']!.toLowerCase();
         return name.contains('local') || !name.contains('network');
       }).toList();
       
       if (offlineVoices.isEmpty) {
-        offlineVoices = parsedVoices;
+        offlineVoices = englishVoices;
       }
 
       // 3. Gender & Acoustic Code Curating
@@ -65,13 +76,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       
       List<VoiceOption> curated = [];
       
+      // Used hyphens instead of unicode bullets to prevent encoding corruption
       final Map<String, String> femaleLabels = {
-        'Female • Soft': '',
-        'Female • Crisp': '',
+        'Female - Soft': '',
+        'Female - Crisp': '',
       };
       final Map<String, String> maleLabels = {
-        'Male • Deep': '',
-        'Male • Clear': '',
+        'Male - Deep': '',
+        'Male - Clear': '',
       };
 
       for (var v in offlineVoices) {
@@ -103,8 +115,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       // 4. OEM Fallback
       if (curated.isEmpty) {
         for (int i = 0; i < offlineVoices.length && i < 4; i++) {
-          curated.add(VoiceOption(label: 'English (US) • Voice ${i + 1}', rawVoice: offlineVoices[i]));
+          curated.add(VoiceOption(label: 'English Voice ${i + 1}', rawVoice: offlineVoices[i]));
         }
+      }
+
+      // 5. Ultimate Fallback (ensures dropdown never completely vanishes)
+      if (curated.isEmpty) {
+        curated.add(VoiceOption(label: 'System Default', rawVoice: {'name': 'default', 'locale': 'en-US'}));
       }
 
       if (mounted) {
