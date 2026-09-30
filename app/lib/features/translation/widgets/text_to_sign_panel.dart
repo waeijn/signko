@@ -28,10 +28,36 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
 
   // Mock list of 30 dynamic words
   final List<String> _dynamicVocabulary = [
-    'hello', 'world', 'please', 'thank', 'you', 'sorry', 'yes', 'no',
-    'help', 'love', 'name', 'what', 'where', 'when', 'why', 'how',
-    'good', 'bad', 'happy', 'sad', 'angry', 'eat', 'drink', 'sleep',
-    'time', 'day', 'night', 'today', 'tomorrow', 'yesterday'
+    'hello',
+    'world',
+    'please',
+    'thank',
+    'you',
+    'sorry',
+    'yes',
+    'no',
+    'help',
+    'love',
+    'name',
+    'what',
+    'where',
+    'when',
+    'why',
+    'how',
+    'good',
+    'bad',
+    'happy',
+    'sad',
+    'angry',
+    'eat',
+    'drink',
+    'sleep',
+    'time',
+    'day',
+    'night',
+    'today',
+    'tomorrow',
+    'yesterday'
   ];
 
   bool isDynamicWord(String word) {
@@ -85,7 +111,10 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
     }
 
     if (widget.showVideoMock) {
-      final words = widget.lastSentText.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+      final words = widget.lastSentText
+          .split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty)
+          .toList();
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -96,22 +125,29 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A3357) : const Color(0xFFEBF2FF), // Soft Accent Blue
+                color: isDark
+                    ? const Color(0xFF2A3357)
+                    : const Color(0xFFEBF2FF), // Soft Accent Blue
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isDark ? Colors.transparent : const Color(0xFF1E56F0).withValues(alpha: 0.1)),
+                border: Border.all(
+                    color: isDark
+                        ? Colors.transparent
+                        : const Color(0xFF1E56F0).withValues(alpha: 0.1)),
               ),
               child: Text(
                 widget.lastSentText,
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0), // Primary Royal Blue
+                  color: isDark
+                      ? const Color(0xFF42E8E0)
+                      : const Color(0xFF1E56F0), // Primary Royal Blue
                 ),
                 textAlign: TextAlign.center,
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
 
           // 2. Interactive Word Filter Chips
@@ -127,43 +163,62 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
                     label: Text(
                       'All',
                       style: GoogleFonts.poppins(
-                        fontWeight: _selectedWordIndex == -1 ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: _selectedWordIndex == -1
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     selected: _selectedWordIndex == -1,
                     onSelected: (selected) {
                       if (selected) setState(() => _selectedWordIndex = -1);
                     },
-                    selectedColor: isDark ? const Color(0xFF42E8E0).withValues(alpha: 0.1) : const Color(0xFF1E56F0).withValues(alpha: 0.1),
-                    checkmarkColor: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0),
+                    selectedColor: isDark
+                        ? const Color(0xFF42E8E0).withValues(alpha: 0.1)
+                        : const Color(0xFF1E56F0).withValues(alpha: 0.1),
+                    checkmarkColor: isDark
+                        ? const Color(0xFF42E8E0)
+                        : const Color(0xFF1E56F0),
                     labelStyle: TextStyle(
-                      color: _selectedWordIndex == -1 
-                        ? (isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0)) 
-                        : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                      color: _selectedWordIndex == -1
+                          ? (isDark
+                              ? const Color(0xFF42E8E0)
+                              : const Color(0xFF1E56F0))
+                          : (isDark ? Colors.white70 : const Color(0xFF64748B)),
                     ),
                   ),
                   ...List.generate(words.length, (index) {
-                    final cleanWord = words[index].replaceAll(RegExp(r'[^a-zA-Z]'), '');
+                    final cleanWord =
+                        words[index].replaceAll(RegExp(r'[^a-zA-Z]'), '');
                     if (cleanWord.isEmpty) return const SizedBox.shrink();
-                    
+
                     final isSelected = _selectedWordIndex == index;
                     return ChoiceChip(
                       label: Text(
                         cleanWord,
                         style: GoogleFonts.poppins(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                       selected: isSelected,
                       onSelected: (selected) {
-                        if (selected) setState(() => _selectedWordIndex = index);
+                        if (selected)
+                          setState(() => _selectedWordIndex = index);
                       },
-                      selectedColor: isDark ? const Color(0xFF42E8E0).withValues(alpha: 0.1) : const Color(0xFF1E56F0).withValues(alpha: 0.1),
-                      checkmarkColor: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0),
+                      selectedColor: isDark
+                          ? const Color(0xFF42E8E0).withValues(alpha: 0.1)
+                          : const Color(0xFF1E56F0).withValues(alpha: 0.1),
+                      checkmarkColor: isDark
+                          ? const Color(0xFF42E8E0)
+                          : const Color(0xFF1E56F0),
                       labelStyle: TextStyle(
-                        color: isSelected 
-                          ? (isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0)) 
-                          : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                        color: isSelected
+                            ? (isDark
+                                ? const Color(0xFF42E8E0)
+                                : const Color(0xFF1E56F0))
+                            : (isDark
+                                ? Colors.white70
+                                : const Color(0xFF64748B)),
                       ),
                     );
                   }),
@@ -181,7 +236,11 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1F2642) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: isDark ? const Color(0xFF2A3357) : const Color(0xFFE2E8F0), width: 1.5),
+                border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF2A3357)
+                        : const Color(0xFFE2E8F0),
+                    width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.03),
@@ -196,7 +255,8 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
                   return FadeTransition(
                     opacity: animation,
                     child: ScaleTransition(
-                      scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+                      scale: Tween<double>(begin: 0.95, end: 1.0)
+                          .animate(animation),
                       child: child,
                     ),
                   );
@@ -231,7 +291,8 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: isDark ? const Color(0xFF2A3357) : const Color(0xFFF8FAFC),
+            backgroundColor:
+                isDark ? const Color(0xFF2A3357) : const Color(0xFFF8FAFC),
           ),
           const SizedBox(height: 16),
           Container(
@@ -258,9 +319,11 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
       // if (isDynamicWord(word)) {
       //   return _buildVideoPlaceholder(word);
       // } else {
-      
-      final cleanLetters = word.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase().split('');
-      final paths = cleanLetters.map((c) => 'assets/images/alphabet/$c.png').toList();
+
+      final cleanLetters =
+          word.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase().split('');
+      final paths =
+          cleanLetters.map((c) => 'assets/images/alphabet/$c.png').toList();
       return _buildWordGroup(paths, isDark: isDark);
       // }
     }
@@ -273,11 +336,15 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
         runSpacing: 16,
         children: List.generate(words.length, (index) {
           final word = words[index];
-          final cleanLetters = word.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase().split('');
-          if (cleanLetters.isEmpty || cleanLetters[0].isEmpty) return const SizedBox.shrink();
-          
-          final paths = cleanLetters.map((c) => 'assets/images/alphabet/$c.png').toList();
-          return _buildWordGroup(paths, isGrouped: true, wordIndex: index, isDark: isDark);
+          final cleanLetters =
+              word.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase().split('');
+          if (cleanLetters.isEmpty || cleanLetters[0].isEmpty)
+            return const SizedBox.shrink();
+
+          final paths =
+              cleanLetters.map((c) => 'assets/images/alphabet/$c.png').toList();
+          return _buildWordGroup(paths,
+              isGrouped: true, wordIndex: index, isDark: isDark);
         }),
       );
     } else if (widget.mediaType == 'image' && widget.mediaPath != null) {
@@ -296,7 +363,8 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
   }
 
   // Renders a single word's letters in a Wrap
-  Widget _buildWordGroup(List<String> paths, {bool isGrouped = false, int? wordIndex, required bool isDark}) {
+  Widget _buildWordGroup(List<String> paths,
+      {bool isGrouped = false, int? wordIndex, required bool isDark}) {
     final wrapWidget = Wrap(
       alignment: WrapAlignment.center,
       spacing: 10,
@@ -309,17 +377,22 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
         color: isDark ? const Color(0xFF141A31) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          onTap: wordIndex != null ? () {
-            setState(() {
-              _selectedWordIndex = wordIndex;
-            });
-          } : null,
+          onTap: wordIndex != null
+              ? () {
+                  setState(() {
+                    _selectedWordIndex = wordIndex;
+                  });
+                }
+              : null,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? const Color(0xFF2A3357) : const Color(0xFFE2E8F0)),
+              border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF2A3357)
+                      : const Color(0xFFE2E8F0)),
             ),
             child: wrapWidget,
           ),
@@ -368,11 +441,15 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.play_circle_fill, size: 80, color: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0)),
+        Icon(Icons.play_circle_fill,
+            size: 80,
+            color: isDark ? const Color(0xFF42E8E0) : const Color(0xFF1E56F0)),
         const SizedBox(height: 16),
         Text(
           'Dynamic Video:',
-          style: GoogleFonts.poppins(color: isDark ? Colors.white54 : const Color(0xFF64748B), fontSize: 14),
+          style: GoogleFonts.poppins(
+              color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              fontSize: 14),
         ),
         const SizedBox(height: 4),
         Padding(

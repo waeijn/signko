@@ -29,9 +29,16 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
   Future<void> _fetchVoices() async {
     try {
-      final voices = await _flutterTts.getVoices;
+      var voices = await _flutterTts.getVoices;
+
+      // Web workaround: Wait for browser's SpeechSynthesis to populate voices asynchronously
+      if ((voices == null || (voices is List && voices.isEmpty)) && mounted) {
+        await Future.delayed(const Duration(milliseconds: 1500));
+        voices = await _flutterTts.getVoices;
+      }
+
       if (voices == null) return;
-      
+
       final List<Map<String, String>> parsedVoices = [];
       for (var voice in voices) {
         if (voice is Map) {
@@ -41,49 +48,77 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           });
         }
       }
-      
-      // 1. Locale Filter: en-us
-      parsedVoices.removeWhere((v) {
-        if (v['name']!.isEmpty) return true;
+
+      // 1. Locale Filter: Broaden to ANY English to prevent vanishing on en-GB or similar browsers
+      var englishVoices = parsedVoices.where((v) {
+        if (v['name']!.isEmpty) return false;
         final loc = v['locale']!.toLowerCase().replaceAll('_', '-');
-        return loc != 'en-us';
-      });
+        return loc.startsWith('en');
+      }).toList();
+
+      if (englishVoices.isEmpty) {
+        englishVoices = parsedVoices; // Fallback to all voices if no English
+      }
 
       // 2. Offline Priority
-      var offlineVoices = parsedVoices.where((v) {
+      var offlineVoices = englishVoices.where((v) {
         final name = v['name']!.toLowerCase();
         return name.contains('local') || !name.contains('network');
       }).toList();
-      
+
       if (offlineVoices.isEmpty) {
-        offlineVoices = parsedVoices;
+        offlineVoices = englishVoices;
       }
 
       // 3. Gender & Acoustic Code Curating
-      final femaleIds = ['sfg', 'tpf', 'iob', 'tpc', 'female', 'zira', 'aria', 'samantha', 'karen', 'victoria'];
-      final maleIds = ['iom', 'tpd', 'iol', 'sfb', 'male', 'david', 'mark', 'aaron', 'arthur', 'fred'];
-      
+      final femaleIds = [
+        'sfg',
+        'tpf',
+        'iob',
+        'tpc',
+        'female',
+        'zira',
+        'aria',
+        'samantha',
+        'karen',
+        'victoria'
+      ];
+      final maleIds = [
+        'iom',
+        'tpd',
+        'iol',
+        'sfb',
+        'male',
+        'david',
+        'mark',
+        'aaron',
+        'arthur',
+        'fred'
+      ];
+
       List<VoiceOption> curated = [];
-      
+
+      // Used hyphens instead of unicode bullets to prevent encoding corruption
       final Map<String, String> femaleLabels = {
-        'Female • Soft': '',
-        'Female • Crisp': '',
+        'Female - Soft': '',
+        'Female - Crisp': '',
       };
       final Map<String, String> maleLabels = {
-        'Male • Deep': '',
-        'Male • Clear': '',
+        'Male - Deep': '',
+        'Male - Clear': '',
       };
 
       for (var v in offlineVoices) {
         final name = v['name']!.toLowerCase();
-        
+
         bool isFemale = false;
         bool isMale = false;
 
         // Ensure 'male' does not accidentally match 'female'
         if (femaleIds.any((id) => name.contains(id))) {
           isFemale = true;
-        } else if (maleIds.any((id) => name.replaceAll('female', '').contains(id))) {
+        } else if (maleIds
+            .any((id) => name.replaceAll('female', '').contains(id))) {
           isMale = true;
         }
 
@@ -96,15 +131,23 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           maleLabels.remove(label);
           curated.add(VoiceOption(label: label, rawVoice: v));
         }
-        
+
         if (curated.length >= 4) break;
       }
 
       // 4. OEM Fallback
       if (curated.isEmpty) {
         for (int i = 0; i < offlineVoices.length && i < 4; i++) {
-          curated.add(VoiceOption(label: 'English (US) • Voice ${i + 1}', rawVoice: offlineVoices[i]));
+          curated.add(VoiceOption(
+              label: 'English Voice ${i + 1}', rawVoice: offlineVoices[i]));
         }
+      }
+
+      // 5. Ultimate Fallback (ensures dropdown never completely vanishes)
+      if (curated.isEmpty) {
+        curated.add(VoiceOption(
+            label: 'System Default',
+            rawVoice: {'name': 'default', 'locale': 'en-US'}));
       }
 
       if (mounted) {
@@ -115,8 +158,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         // Automatically set the first curated voice as the active default upon initialization
         final settingsNotifier = ref.read(settingsProvider.notifier);
         final currentVoice = ref.read(settingsProvider).ttsVoice;
-        
-        if (curated.isNotEmpty && (currentVoice == null || !curated.any((opt) => opt.rawVoice['name'] == currentVoice))) {
+
+        if (curated.isNotEmpty &&
+            (currentVoice == null ||
+                !curated.any((opt) => opt.rawVoice['name'] == currentVoice))) {
           settingsNotifier.setTtsVoice(curated.first.rawVoice['name']!);
         }
       }
@@ -147,17 +192,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
           _buildSwitchTile(
-              context, 'Auto-translate Sign to Text', settings.autoTranslate, (v) {
+              context, 'Auto-translate Sign to Text', settings.autoTranslate,
+              (v) {
             settingsNotifier.toggleAutoTranslate(v);
           }),
-          _buildSwitchTile(
-              context, 'Speak translations aloud (TTS)', settings.speakTranslations, (v) {
+          _buildSwitchTile(context, 'Speak translations aloud (TTS)',
+              settings.speakTranslations, (v) {
             settingsNotifier.toggleSpeakTranslations(v);
             if (!v) {
               _flutterTts.stop();
             }
           }),
-          
           AnimatedSize(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
@@ -169,30 +214,38 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.volume_up_outlined, color: Colors.grey.shade500, size: 20),
+                            Icon(Icons.volume_up_outlined,
+                                color: Colors.grey.shade500, size: 20),
                             const SizedBox(width: 12),
-                            const Text('Voice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                            const Text('Voice',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w500)),
                           ],
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          height: 36, // Compact height matching standard switches
+                          height:
+                              36, // Compact height matching standard switches
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEBF2FF),
+                            color: Theme.of(context).colorScheme.secondary,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
-                              value: _voiceOptions.any((o) => o.rawVoice['name'] == settings.ttsVoice)
+                              value: _voiceOptions.any((o) =>
+                                      o.rawVoice['name'] == settings.ttsVoice)
                                   ? settings.ttsVoice
                                   : _voiceOptions.first.rawVoice['name'],
-                              icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF1E56F0), size: 20),
-                              style: const TextStyle(
-                                color: Color(0xFF1E56F0),
+                              icon: Icon(Icons.keyboard_arrow_down,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 20),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
-                              dropdownColor: const Color(0xFFEBF2FF),
+                              dropdownColor:
+                                  Theme.of(context).colorScheme.secondary,
                               borderRadius: BorderRadius.circular(16),
                               alignment: AlignmentDirectional.centerEnd,
                               items: _voiceOptions.map((option) {
@@ -202,13 +255,20 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                 );
                               }).toList(),
                               onChanged: (String? newName) async {
-                                if (newName != null && newName != settings.ttsVoice) {
+                                if (newName != null &&
+                                    newName != settings.ttsVoice) {
                                   settingsNotifier.setTtsVoice(newName);
-                                  final option = _voiceOptions.firstWhere((o) => o.rawVoice['name'] == newName);
+                                  final option = _voiceOptions.firstWhere(
+                                      (o) => o.rawVoice['name'] == newName);
                                   await _flutterTts.stop();
-                                  await Future.delayed(const Duration(milliseconds: 100));
-                                  await _flutterTts.setVoice({"name": option.rawVoice['name']!, "locale": option.rawVoice['locale']!});
-                                  await _flutterTts.speak("Hello, voice selected.");
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 100));
+                                  await _flutterTts.setVoice({
+                                    "name": option.rawVoice['name']!,
+                                    "locale": option.rawVoice['locale']!
+                                  });
+                                  await _flutterTts
+                                      .speak("Hello, voice selected.");
                                 }
                               },
                             ),
@@ -219,8 +279,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   )
                 : const SizedBox.shrink(),
           ),
-
-          _buildSwitchTile(context, 'Save translation history', settings.saveHistory, (v) {
+          _buildSwitchTile(
+              context, 'Save translation history', settings.saveHistory, (v) {
             settingsNotifier.toggleSaveHistory(v);
           }),
           _buildSwitchTile(context, 'Dark Mode', settings.isDarkMode, (v) {

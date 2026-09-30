@@ -59,7 +59,8 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Clear History'),
-                  content: const Text('Are you sure you want to delete all translation history?'),
+                  content: const Text(
+                      'Are you sure you want to delete all translation history?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -70,7 +71,8 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                         Navigator.pop(context);
                         _clearHistory();
                       },
-                      child: const Text('Clear', style: TextStyle(color: Colors.red)),
+                      child: const Text('Clear',
+                          style: TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
@@ -86,16 +88,19 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                 if (!saveHistory && _historyItems.isNotEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
                     color: Colors.amber.shade100,
                     child: Row(
                       children: [
-                        Icon(Icons.history_toggle_off, color: Colors.amber.shade900, size: 20),
+                        Icon(Icons.history_toggle_off,
+                            color: Colors.amber.shade900, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'History saving is disabled. New translations will not appear here.',
-                            style: TextStyle(color: Colors.amber.shade900, fontSize: 13),
+                            style: TextStyle(
+                                color: Colors.amber.shade900, fontSize: 13),
                           ),
                         ),
                       ],
@@ -105,31 +110,35 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                   child: _historyItems.isEmpty
                       ? Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 40.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  saveHistory ? Icons.history : Icons.history_toggle_off, 
-                                  size: 64, 
-                                  color: Colors.grey.shade300
-                                ),
+                                    saveHistory
+                                        ? Icons.history
+                                        : Icons.history_toggle_off,
+                                    size: 64,
+                                    color: Colors.grey.shade300),
                                 const SizedBox(height: 16),
                                 Text(
-                                  saveHistory ? 'No history yet' : 'History is disabled', 
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600, 
-                                    fontSize: 18, 
-                                    fontWeight: FontWeight.bold
-                                  )
-                                ),
+                                    saveHistory
+                                        ? 'No history yet'
+                                        : 'History is disabled',
+                                    style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
                                 Text(
-                                  saveHistory 
-                                    ? 'Translations will appear here once you start using the app.' 
-                                    : 'Enable "Save translation history" in Settings to keep track of your translations.',
+                                  saveHistory
+                                      ? 'Translations will appear here once you start using the app.'
+                                      : 'Enable "Save translation history" in Settings to keep track of your translations.',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                                  style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 14),
                                 ),
                               ],
                             ),
@@ -140,32 +149,39 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                           itemCount: _historyItems.length,
                           itemBuilder: (context, index) {
                             final item = _historyItems[index];
-                            
+
                             // Grouping by Date header
                             bool showHeader = false;
                             String headerText = '';
-                            
+
                             if (index == 0) {
                               showHeader = true;
                             } else {
                               final prevItem = _historyItems[index - 1];
-                              if (item.timestamp.day != prevItem.timestamp.day ||
-                                  item.timestamp.month != prevItem.timestamp.month ||
-                                  item.timestamp.year != prevItem.timestamp.year) {
+                              if (item.timestamp.day !=
+                                      prevItem.timestamp.day ||
+                                  item.timestamp.month !=
+                                      prevItem.timestamp.month ||
+                                  item.timestamp.year !=
+                                      prevItem.timestamp.year) {
                                 showHeader = true;
                               }
                             }
-                            
+
                             if (showHeader) {
                               final now = DateTime.now();
-                              if (item.timestamp.day == now.day && item.timestamp.month == now.month && item.timestamp.year == now.year) {
+                              if (item.timestamp.day == now.day &&
+                                  item.timestamp.month == now.month &&
+                                  item.timestamp.year == now.year) {
                                 headerText = 'Today';
                               } else {
-                                headerText = DateFormat('MMMM d, yyyy').format(item.timestamp);
+                                headerText = DateFormat('MMMM d, yyyy')
+                                    .format(item.timestamp);
                               }
                             }
 
-                            final timeFormatted = DateFormat('h:mm a').format(item.timestamp);
+                            final timeFormatted =
+                                DateFormat('h:mm a').format(item.timestamp);
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +190,9 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                                   if (index != 0) const SizedBox(height: 32),
                                   Text(
                                     headerText,
-                                    style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 16),
                                 ],
@@ -183,7 +201,9 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                                   child: _buildHistoryItem(
                                     context,
                                     item.text,
-                                    item.mode == 'Text to Sign' ? 'FSL Translation' : 'Spoken English',
+                                    item.mode == 'Text to Sign'
+                                        ? 'FSL Translation'
+                                        : 'Spoken English',
                                     item.mode,
                                     timeFormatted,
                                   ),
@@ -234,7 +254,9 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
-                Text(translated, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                Text(translated,
+                    style:
+                        TextStyle(color: Colors.grey.shade600, fontSize: 12)),
               ],
             ),
           ),

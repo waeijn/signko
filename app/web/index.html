@@ -31,6 +31,20 @@
 
   <title>signko_app</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* Disable Edge's native password reveal icon to prevent double eyes */
+    input::-ms-reveal,
+    input::-ms-clear {
+      display: none !important;
+    }
+
+    /* Prevent blinding white flashes during navigation by matching the dark background */
+    body {
+      background-color: #0F172A; /* Slate 900 */
+      margin: 0;
+      padding: 0;
+    }
+  </style>
 </head>
 <body>
   <!--
