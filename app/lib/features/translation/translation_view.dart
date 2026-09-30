@@ -55,7 +55,7 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
   Future<void> _initTts() async {
     await _flutterTts.setLanguage("en-US");
     // Web and Desktop treat 0.5 as half-speed. Android treats 0.5 as normal.
-    await _flutterTts.setSpeechRate(kIsWeb ? 0.9 : 0.5);
+    await _flutterTts.setSpeechRate(kIsWeb ? 0.65 : 0.5);
     await _flutterTts.setVolume(1.0);
     await _flutterTts.setPitch(1.0);
 
