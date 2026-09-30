@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../dashboard/dashboard_view.dart';
+import '../auth/views/login_view.dart';
 
 class SplashView extends StatelessWidget {
   const SplashView({super.key});
@@ -41,10 +41,10 @@ class SplashView extends StatelessWidget {
                             left: 40.0, right: 40.0, bottom: 24.0),
                         child: GestureDetector(
                           onTap: () {
-                            // Navigate to the main Dashboard View
+                            // Navigate to the Login View
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
-                                builder: (context) => const DashboardView(),
+                                builder: (context) => const LoginView(),
                               ),
                             );
                           },
