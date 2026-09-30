@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:signko_app/features/splash/splash_view.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../auth/providers/auth_provider.dart';
+import '../auth/views/login_view.dart';
 
-class AccountView extends StatelessWidget {
+class AccountView extends ConsumerWidget {
   const AccountView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -24,31 +30,52 @@ class AccountView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const CircleAvatar(
+            // Avatar
+            CircleAvatar(
               radius: 60,
-              backgroundColor: Colors.blue,
-              child: Icon(Icons.person, size: 60, color: Colors.white),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Text(
+                user != null ? user.name[0].toUpperCase() : '?',
+                style: const TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'SignKo User',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+
+            // Name
+            Text(
+              user?.name ?? 'Guest',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
+
+            // Email
             Text(
-              'user@example.com',
+              user?.email ?? 'Not signed in',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
+            const SizedBox(height: 4),
+
+            // Join Date
+            if (user != null)
+              Text(
+                'Joined ${DateFormat('MMMM yyyy').format(user.joinedAt)}',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+              ),
+
             const SizedBox(height: 32),
 
             // Account Options
-            _buildAccountOption(Icons.person_outline, 'Edit Profile'),
+            _buildAccountOption(context, Icons.person_outline, 'Edit Profile'),
             const Divider(),
-            _buildAccountOption(Icons.notifications_outlined, 'Notifications'),
+            _buildAccountOption(context, Icons.notifications_outlined, 'Notifications'),
             const Divider(),
-            _buildAccountOption(Icons.lock_outline, 'Privacy & Security'),
+            _buildAccountOption(context, Icons.lock_outline, 'Privacy & Security'),
             const Divider(),
-            _buildAccountOption(Icons.help_outline, 'Help & Support'),
+            _buildAccountOption(context, Icons.help_outline, 'Help & Support'),
             const Divider(),
             const SizedBox(height: 24),
 
@@ -57,9 +84,31 @@ class AccountView extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const SplashView()),
-                    (Route<dynamic> route) => false,
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Log Out'),
+                      content: const Text('Are you sure you want to log out?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            await ref.read(authProvider.notifier).logout();
+                            if (context.mounted) {
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (_) => const LoginView()),
+                                (route) => false,
+                              );
+                            }
+                          },
+                          child: const Text('Log Out', style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -83,9 +132,9 @@ class AccountView extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountOption(IconData icon, String title) {
+  Widget _buildAccountOption(BuildContext context, IconData icon, String title) {
     return ListTile(
-      leading: Icon(icon, color: Colors.blue),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
       trailing:
           const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
