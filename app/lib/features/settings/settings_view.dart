@@ -195,7 +195,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           height: 36, // Compact height matching standard switches
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEBF2FF),
+                            color: Theme.of(context).colorScheme.secondary,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: DropdownButtonHideUnderline(
@@ -203,13 +203,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                               value: _voiceOptions.any((o) => o.rawVoice['name'] == settings.ttsVoice)
                                   ? settings.ttsVoice
                                   : _voiceOptions.first.rawVoice['name'],
-                              icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF1E56F0), size: 20),
-                              style: const TextStyle(
-                                color: Color(0xFF1E56F0),
+                              icon: Icon(Icons.keyboard_arrow_down, color: Theme.of(context).colorScheme.primary, size: 20),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
-                              dropdownColor: const Color(0xFFEBF2FF),
+                              dropdownColor: Theme.of(context).colorScheme.secondary,
                               borderRadius: BorderRadius.circular(16),
                               alignment: AlignmentDirectional.centerEnd,
                               items: _voiceOptions.map((option) {

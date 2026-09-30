@@ -61,7 +61,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
               Center(
                 child: Image.asset(
                   'assets/logo/logo.png',
-                  height: 60,
+                  height: 100,
                   fit: BoxFit.contain,
                 ),
               ),
