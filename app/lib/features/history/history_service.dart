@@ -33,22 +33,22 @@ class HistoryService {
   static Future<void> saveHistory(TranslationHistoryItem item) async {
     final prefs = await SharedPreferences.getInstance();
     final List<String> historyList = prefs.getStringList(_key) ?? [];
-    
+
     // Add new item to the beginning of the list
     historyList.insert(0, jsonEncode(item.toJson()));
-    
+
     // Optional: limit history size (e.g., to 100 items)
     if (historyList.length > 100) {
       historyList.removeLast();
     }
-    
+
     await prefs.setStringList(_key, historyList);
   }
 
   static Future<List<TranslationHistoryItem>> getHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final List<String> historyList = prefs.getStringList(_key) ?? [];
-    
+
     return historyList.map((item) {
       return TranslationHistoryItem.fromJson(jsonDecode(item));
     }).toList();
