@@ -5,36 +5,36 @@ class AppTheme {
   // ── SignKo Color Palette ──────────────────────────────────────────────
 
   // Primary Brand
-  static const Color _royalBlue = Color(0xFF1E56F0);   // Light
-  static const Color _brightBlue = Color(0xFF3B82F6);  // Dark
+  static const Color _royalBlue = Color(0xFF1E56F0); // Light
+  static const Color _brightBlue = Color(0xFF3B82F6); // Dark
 
   // Secondary / Soft Accent
-  static const Color _iceBlue = Color(0xFFEBF2FF);     // Light
-  static const Color _deepNavy = Color(0xFF172554);     // Dark
+  static const Color _iceBlue = Color(0xFFEBF2FF); // Light
+  static const Color _deepNavy = Color(0xFF172554); // Dark
 
   // Scaffold Background
-  static const Color _slate100 = Color(0xFFF1F5F9);    // Light
-  static const Color _slate900 = Color(0xFF0F172A);     // Dark
+  static const Color _slate100 = Color(0xFFF1F5F9); // Light
+  static const Color _slate900 = Color(0xFF0F172A); // Dark
 
   // Card / Surface
-  static const Color _pureWhite = Color(0xFFFFFFFF);    // Light
-  static const Color _slate800 = Color(0xFF1E293B);     // Dark
+  static const Color _pureWhite = Color(0xFFFFFFFF); // Light
+  static const Color _slate800 = Color(0xFF1E293B); // Dark
 
   // Inner Box / Subtle Fill
-  static const Color _slate50 = Color(0xFFF8FAFC);      // Light
+  static const Color _slate50 = Color(0xFFF8FAFC); // Light
   static const Color _deepestSlate = Color(0xFF0B1120); // Dark
 
   // Primary Text
-  static const Color _darkSlate = Color(0xFF1E293B);    // Light
-  static const Color _offWhite = Color(0xFFF8FAFC);     // Dark
+  static const Color _darkSlate = Color(0xFF1E293B); // Light
+  static const Color _offWhite = Color(0xFFF8FAFC); // Dark
 
   // Secondary / Muted Text
-  static const Color _slate500 = Color(0xFF64748B);     // Light
-  static const Color _slate400 = Color(0xFF94A3B8);     // Dark
+  static const Color _slate500 = Color(0xFF64748B); // Light
+  static const Color _slate400 = Color(0xFF94A3B8); // Dark
 
   // Borders & Dividers
-  static const Color _slate200 = Color(0xFFE2E8F0);    // Light
-  static const Color _slate700 = Color(0xFF334155);     // Dark
+  static const Color _slate200 = Color(0xFFE2E8F0); // Light
+  static const Color _slate700 = Color(0xFF334155); // Dark
 
   // ── Light Theme ───────────────────────────────────────────────────────
 
@@ -79,7 +79,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: _royalBlue,
           foregroundColor: _pureWhite,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
       colorScheme: const ColorScheme.light(
@@ -144,7 +145,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: _brightBlue,
           foregroundColor: _offWhite,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
       colorScheme: const ColorScheme.dark(
