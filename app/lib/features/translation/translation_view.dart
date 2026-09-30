@@ -19,7 +19,8 @@ class TranslationView extends ConsumerStatefulWidget {
   ConsumerState<TranslationView> createState() => _TranslationViewState();
 }
 
-class _TranslationViewState extends ConsumerState<TranslationView> with SingleTickerProviderStateMixin {
+class _TranslationViewState extends ConsumerState<TranslationView>
+    with SingleTickerProviderStateMixin {
   TranslationMode _currentMode = TranslationMode.signToText;
   final TextEditingController _textController = TextEditingController();
   late stt.SpeechToText _speech;
@@ -40,7 +41,7 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
-    
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -66,7 +67,8 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
         if (voices != null) {
           for (var voice in voices) {
             if (voice is Map && voice['name'] == settings.ttsVoice) {
-              await _flutterTts.setVoice({"name": voice['name'], "locale": voice['locale']});
+              await _flutterTts
+                  .setVoice({"name": voice['name'], "locale": voice['locale']});
               break;
             }
           }
@@ -95,7 +97,8 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
 
     // Automatically mute/stop the microphone if it was listening when they hit send
     if (_isListening) {
-      _speech.cancel(); // cancel() prevents the plugin from sending one last onResult callback
+      _speech
+          .cancel(); // cancel() prevents the plugin from sending one last onResult callback
       _isListening = false;
       _pulseController.stop();
       _pulseController.reset();
@@ -114,7 +117,9 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
     if (settings.saveHistory) {
       HistoryService.saveHistory(TranslationHistoryItem(
         text: text,
-        mode: _currentMode == TranslationMode.textToSign ? 'Text to Sign' : 'Sign to Text',
+        mode: _currentMode == TranslationMode.textToSign
+            ? 'Text to Sign'
+            : 'Sign to Text',
         timestamp: DateTime.now(),
       ));
     }
@@ -134,8 +139,10 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
         final data = jsonDecode(response.body);
         final mediaPath = data['media_path'];
         final mediaType = data['media_type'];
-        final mediaSequence = data['media_sequence'] != null 
-            ? (data['media_sequence'] as List).map((wordList) => List<String>.from(wordList)).toList()
+        final mediaSequence = data['media_sequence'] != null
+            ? (data['media_sequence'] as List)
+                .map((wordList) => List<String>.from(wordList))
+                .toList()
             : null;
 
         if (mounted) {
@@ -146,7 +153,8 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
             _isTranslating = false;
             _showVideoMock = true;
           });
-          debugPrint('Successfully loaded $mediaType from database: ${mediaPath ?? mediaSequence}');
+          debugPrint(
+              'Successfully loaded $mediaType from database: ${mediaPath ?? mediaSequence}');
         }
       } else {
         throw Exception('Failed to translate');
@@ -216,10 +224,11 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
           title: Padding(
             padding: const EdgeInsets.only(left: 12.0),
             child: Transform.scale(
-              scale: 2.5, // Scales up the image to counteract the large 512x512 transparent padding
+              scale:
+                  2.5, // Scales up the image to counteract the large 512x512 transparent padding
               child: Image.asset(
                 'assets/logo/text.png',
-                height: 32, 
+                height: 32,
                 fit: BoxFit.contain,
               ),
             ),
@@ -310,7 +319,10 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
                                       child: IconButton(
                                         icon: Icon(
                                           Icons.refresh,
-                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.5),
                                         ),
                                         tooltip: 'Reset Translation',
                                         onPressed: () {
@@ -341,9 +353,9 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
                           color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.1),
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.1),
                           width: 1.0),
                       boxShadow: [
                         BoxShadow(
@@ -373,8 +385,8 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             ScaleTransition(
-                              scale: _isListening 
-                                  ? _pulseAnimation 
+                              scale: _isListening
+                                  ? _pulseAnimation
                                   : const AlwaysStoppedAnimation(1.0),
                               child: IconButton(
                                 icon: Icon(
@@ -523,23 +535,26 @@ class _TranslationViewState extends ConsumerState<TranslationView> with SingleTi
                     ),
                     IconButton(
                       icon: Icon(
-                        isTtsEnabled ? Icons.volume_up : Icons.volume_off, 
-                        color: isTtsEnabled ? Theme.of(context).colorScheme.primary : Colors.grey.shade400
-                      ),
+                          isTtsEnabled ? Icons.volume_up : Icons.volume_off,
+                          color: isTtsEnabled
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey.shade400),
                       onPressed: () {
                         if (isTtsEnabled) {
                           _speak('I Love You');
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Text-to-Speech is disabled. You can turn it on in Settings.'),
+                              content: Text(
+                                  'Text-to-Speech is disabled. You can turn it on in Settings.'),
                               behavior: SnackBarBehavior.floating,
                               duration: Duration(seconds: 2),
                             ),
                           );
                         }
                       },
-                      tooltip: isTtsEnabled ? 'Speak Translation' : 'TTS Disabled',
+                      tooltip:
+                          isTtsEnabled ? 'Speak Translation' : 'TTS Disabled',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
