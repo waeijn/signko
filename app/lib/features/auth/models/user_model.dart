@@ -35,11 +35,13 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      avatarUrl: json['avatarUrl'],
-      joinedAt: DateTime.parse(json['joinedAt']),
+      id: json['id'].toString(), // Backend returns int, convert to string
+      name: json['name'] ?? 'Unknown',
+      email: json['email'] ?? '',
+      avatarUrl: json['avatar_url'], // Snake case from backend
+      joinedAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
   }
 }
