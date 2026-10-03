@@ -24,6 +24,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
   String _fullSentence = '';
   String _lastClassifiedLetter = '';
   bool _isRunning = false;
+  bool _isTerminalExpanded = false;
 
   // Confidence simulation
   double _confidence = 0.0;
@@ -140,13 +141,11 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
     if (!mounted) return;
     setState(() {
       _terminalLines.add(line);
-      // Keep terminal buffer at a reasonable size
       if (_terminalLines.length > 200) {
         _terminalLines.removeRange(0, _terminalLines.length - 200);
       }
     });
 
-    // Auto-scroll to bottom
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_terminalScrollController.hasClients) {
         _terminalScrollController.animateTo(
@@ -161,308 +160,438 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settings = ref.watch(settingsProvider);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // -- Translated Output Card --
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        Expanded(
+          child: _buildMainTranslationCard(theme),
+        ),
+        if (settings.showTelemetry) ...[
+          const SizedBox(height: 16),
+          _buildDockedTerminal(theme),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMainTranslationCard(ThemeData theme) {
+    Color confColor;
+    if (_confidence >= 0.85) {
+      confColor = const Color(0xFF10B981); // Emerald Green
+    } else if (_confidence >= 0.70) {
+      confColor = Colors.orange;
+    } else {
+      confColor = Colors.red.shade400; // Soft Crimson Red
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'TRANSLATED TEXT',
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.volume_up,
+                      color: _fullSentence.isNotEmpty
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                    onPressed: _fullSentence.isNotEmpty
+                        ? () => _tts.speak(_fullSentence.trim())
+                        : null,
+                    tooltip: 'Speak translation',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: Icon(
+                      Icons.refresh,
+                      color: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
+                          ? Colors.red
+                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                    onPressed: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
+                        ? () {
+                            setState(() {
+                              _fullSentence = '';
+                              _currentWord = '';
+                              _lastClassifiedLetter = '';
+                              _confidence = 0.0;
+                              _terminalLines.clear();
+                            });
+                          }
+                        : null,
+                    tooltip: 'Reset translation',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  if (_isRunning) ...[
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+          const Spacer(),
+
+          // Translated Text Display
+          Center(
+            child: Text(
+              _fullSentence.isEmpty && _currentWord.isEmpty
+                  ? 'Waiting for input...'
+                  : '$_fullSentence$_currentWord',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 32,
+                height: 1.2,
+                fontWeight: FontWeight.w800,
+                color: _fullSentence.isEmpty && _currentWord.isEmpty
+                    ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+          if (_currentWord.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'TRANSLATED TEXT',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 10,
-                      letterSpacing: 1.0,
-                    ),
+                    'Spelling: ',
+                    style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
                   ),
-                  Row(
-                    children: [
-                      // Speaker button
-                      IconButton(
-                        icon: Icon(
-                          Icons.volume_up,
-                          color: _fullSentence.isNotEmpty
-                              ? theme.colorScheme.primary
-                              : Colors.grey.shade400,
-                          size: 20,
-                        ),
-                        onPressed: _fullSentence.isNotEmpty
-                            ? () => _tts.speak(_fullSentence.trim())
-                            : null,
-                        tooltip: 'Speak translation',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      const SizedBox(width: 8),
-                      // Reset button
-                      IconButton(
-                        icon: Icon(
-                          Icons.refresh,
-                          color: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty)
-                              ? Colors.red
-                              : Colors.grey.shade400,
-                          size: 20,
-                        ),
-                        onPressed: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty)
-                            ? () {
-                                setState(() {
-                                  _fullSentence = '';
-                                  _currentWord = '';
-                                  _lastClassifiedLetter = '';
-                                  _confidence = 0.0;
-                                });
-                              }
-                            : null,
-                        tooltip: 'Reset translation',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      // Live indicator
-                      if (_isRunning) ...[
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.redAccent,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'LIVE',
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                      ],
-                    ],
+                  Text(
+                    _currentWord,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                      letterSpacing: 3.0,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                _fullSentence.isEmpty && _currentWord.isEmpty
-                    ? 'Waiting for input...'
-                    : '$_fullSentence$_currentWord',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: _fullSentence.isEmpty && _currentWord.isEmpty
-                      ? Colors.grey.shade400
-                      : theme.colorScheme.onSurface,
-                ),
-              ),
-              if (_currentWord.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      'Spelling: ',
-                      style: TextStyle(
-                          fontSize: 13, color: Colors.grey.shade500),
-                    ),
-                    Text(
-                      _currentWord,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                        letterSpacing: 2.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // -- Confidence & Last Letter Row --
-        if (_isRunning)
-          Row(
-            children: [
-              // Last classified letter
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _lastClassifiedLetter.isEmpty
-                      ? '?'
-                      : _lastClassifiedLetter,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Confidence bar
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Confidence: ${(_confidence * 100).toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: _confidence,
-                        minHeight: 8,
-                        backgroundColor: Colors.grey.shade200,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _confidence > 0.9
-                              ? Colors.green
-                              : _confidence > 0.7
-                                  ? Colors.orange
-                                  : Colors.red,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-        const SizedBox(height: 16),
-
-        // -- Terminal Header --
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.terminal, size: 16, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Text(
-                  'SENSOR DATA STREAM',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ],
-            ),
-            // Start / Stop button
-            SizedBox(
-              height: 32,
-              child: ElevatedButton.icon(
-                onPressed: _isRunning ? _stopSimulation : _startSimulation,
-                icon: Icon(
-                    _isRunning ? Icons.stop : Icons.play_arrow,
-                    size: 16),
-                label: Text(_isRunning ? 'Stop' : 'Start',
-                    style: const TextStyle(fontSize: 12)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _isRunning ? Colors.red : theme.colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
             ),
           ],
-        ),
 
-        const SizedBox(height: 8),
+          const Spacer(),
 
-        // -- Terminal Window --
-        Container(
-          width: double.infinity,
-          height: 200,
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade800),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: _terminalLines.isEmpty
-                ? Center(
-                    child: Text(
-                      'Press Start to begin receiving sensor data.',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                      ),
+          // Gesture Visual Box & Confidence Bar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              children: [
+                // Visual Placeholder Box
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: _isRunning
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                        : theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _isRunning
+                          ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                          : Colors.transparent,
                     ),
-                  )
-                : ListView.builder(
-                    controller: _terminalScrollController,
-                    padding: const EdgeInsets.all(12),
-                    itemCount: _terminalLines.length,
-                    itemBuilder: (context, index) {
-                      final line = _terminalLines[index];
-                      Color lineColor;
-                      if (line.startsWith('[SYS]')) {
-                        lineColor = Colors.cyanAccent;
-                      } else if (line.startsWith('[ML]')) {
-                        lineColor = Colors.greenAccent;
-                      } else if (line.isEmpty) {
-                        return const SizedBox(height: 4);
-                      } else {
-                        lineColor = Colors.grey.shade400;
-                      }
-
-                      return Text(
-                        line,
-                        style: TextStyle(
-                          color: lineColor,
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                          height: 1.5,
-                        ),
-                      );
-                    },
                   ),
+                  child: Center(
+                    child: _isRunning && _lastClassifiedLetter.isNotEmpty
+                        ? Text(
+                            _lastClassifiedLetter,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : Icon(
+                            Icons.back_hand,
+                            color: _isRunning
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+
+                // Confidence Bar
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Confidence',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            '${(_confidence * 100).toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: _isRunning ? confColor : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: _isRunning ? _confidence : 0,
+                          minHeight: 8,
+                          backgroundColor: theme.colorScheme.outlineVariant
+                              .withValues(alpha: 0.3),
+                          valueColor: AlwaysStoppedAnimation<Color>(confColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 24),
+          
+          // Primary Action Button (Start/Stop)
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton.icon(
+              onPressed: _isRunning ? _stopSimulation : _startSimulation,
+              icon: Icon(
+                _isRunning ? Icons.stop : Icons.back_hand,
+                size: 24,
+              ),
+              label: Text(
+                _isRunning ? 'Stop Translating' : 'Start Translating',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isRunning
+                    ? Colors.red.shade600
+                    : theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDockedTerminal(ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E), // Slate/Black
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade800),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ]),
+      child: Column(
+        children: [
+          // Collapsed Header (Tap to toggle)
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isTerminalExpanded = !_isTerminalExpanded;
+              });
+            },
+            borderRadius: _isTerminalExpanded
+                ? const BorderRadius.vertical(top: Radius.circular(16))
+                : BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Row(
+                children: [
+                  Icon(Icons.terminal, size: 18, color: Colors.grey.shade400),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Telemetry',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.grey.shade300,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Live Dot
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _isRunning ? const Color(0xFF10B981) : Colors.grey,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            _isRunning ? 'Live • 50 Hz' : 'Offline',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: _isRunning ? const Color(0xFF10B981) : Colors.grey,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const SizedBox(width: 8),
+                  Icon(
+                    _isTerminalExpanded
+                        ? Icons.keyboard_arrow_down
+                        : Icons.keyboard_arrow_up,
+                    color: Colors.grey.shade500,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded Log Body
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: Container(
+              height: _isTerminalExpanded ? 200 : 0,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                  border: Border(
+                      top: BorderSide(
+                color: _isTerminalExpanded
+                    ? Colors.grey.shade800
+                    : Colors.transparent,
+              ))),
+              child: _terminalLines.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Press Start to begin receiving sensor data.',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _terminalScrollController,
+                      padding: const EdgeInsets.all(12),
+                      itemCount: _terminalLines.length,
+                      itemBuilder: (context, index) {
+                        final line = _terminalLines[index];
+                        Color lineColor;
+                        if (line.startsWith('[SYS]')) {
+                          lineColor = Colors.cyanAccent;
+                        } else if (line.startsWith('[ML]')) {
+                          lineColor = const Color(0xFF10B981); // Emerald Green
+                        } else if (line.isEmpty) {
+                          return const SizedBox(height: 4);
+                        } else {
+                          lineColor = const Color(0xFF94A3B8); // Slate Gray
+                        }
+
+                        return Text(
+                          line,
+                          style: TextStyle(
+                            color: lineColor,
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                            height: 1.5,
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

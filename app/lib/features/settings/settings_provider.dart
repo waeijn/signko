@@ -12,6 +12,7 @@ class SettingsState {
   final bool speakTranslations;
   final bool saveHistory;
   final bool isDarkMode;
+  final bool showTelemetry;
   final String? ttsVoice;
 
   SettingsState({
@@ -19,6 +20,7 @@ class SettingsState {
     required this.speakTranslations,
     required this.saveHistory,
     required this.isDarkMode,
+    required this.showTelemetry,
     this.ttsVoice,
   });
 
@@ -27,6 +29,7 @@ class SettingsState {
     bool? speakTranslations,
     bool? saveHistory,
     bool? isDarkMode,
+    bool? showTelemetry,
     String? ttsVoice,
   }) {
     return SettingsState(
@@ -34,6 +37,7 @@ class SettingsState {
       speakTranslations: speakTranslations ?? this.speakTranslations,
       saveHistory: saveHistory ?? this.saveHistory,
       isDarkMode: isDarkMode ?? this.isDarkMode,
+      showTelemetry: showTelemetry ?? this.showTelemetry,
       ttsVoice: ttsVoice ?? this.ttsVoice,
     );
   }
@@ -48,6 +52,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           speakTranslations: prefs.getBool('speakTranslations') ?? true,
           saveHistory: prefs.getBool('saveHistory') ?? true,
           isDarkMode: prefs.getBool('isDarkMode') ?? false,
+          showTelemetry: prefs.getBool('showTelemetry') ?? false,
           ttsVoice: prefs.getString('ttsVoice'),
         ));
 
@@ -74,6 +79,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   void toggleDarkMode(bool value) {
     prefs.setBool('isDarkMode', value);
     state = state.copyWith(isDarkMode: value);
+  }
+
+  void toggleShowTelemetry(bool value) {
+    prefs.setBool('showTelemetry', value);
+    state = state.copyWith(showTelemetry: value);
   }
 }
 

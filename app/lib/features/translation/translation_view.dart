@@ -296,7 +296,7 @@ class _TranslationViewState extends ConsumerState<TranslationView>
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: _currentMode == TranslationMode.signToText
-                            ? SingleChildScrollView(child: SignToTextPanel()) // Live simulation panel
+                            ? SignToTextPanel() // Live simulation panel
                             : Stack(
                                 children: [
                                   Positioned.fill(
