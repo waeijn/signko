@@ -7,7 +7,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_tts/flutter_tts.dart';
 import '../account/account_view.dart';
 import 'widgets/text_to_sign_panel.dart';
-import '../history/history_service.dart';
+import 'widgets/sign_to_text_panel.dart';
+import '../history/providers/history_provider.dart';
 import '../settings/settings_provider.dart';
 
 enum TranslationMode { signToText, textToSign }
@@ -115,13 +116,10 @@ class _TranslationViewState extends ConsumerState<TranslationView>
     });
 
     if (settings.saveHistory) {
-      HistoryService.saveHistory(TranslationHistoryItem(
-        text: text,
-        mode: _currentMode == TranslationMode.textToSign
-            ? 'Text to Sign'
-            : 'Sign to Text',
-        timestamp: DateTime.now(),
-      ));
+      final modeStr = _currentMode == TranslationMode.textToSign
+          ? 'Text to Sign'
+          : 'Sign to Text';
+      ref.read(historyProvider.notifier).addHistory(text, modeStr == 'Text to Sign' ? 'FSL Translation' : 'Spoken English', modeStr);
     }
 
     try {
@@ -298,8 +296,7 @@ class _TranslationViewState extends ConsumerState<TranslationView>
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: _currentMode == TranslationMode.signToText
-                            ? _buildSignToTextContent(
-                                context) // Shows the translated text blocks
+                            ? SingleChildScrollView(child: SignToTextPanel()) // Live simulation panel
                             : Stack(
                                 children: [
                                   Positioned.fill(
@@ -479,109 +476,5 @@ class _TranslationViewState extends ConsumerState<TranslationView>
   }
 
 // Removed _buildTextToSignPlaceholder since it is now in TextToSignPanel
-
-  Widget _buildSignToTextContent(BuildContext context) {
-    final settings = ref.watch(settingsProvider);
-    final isTtsEnabled = settings.speakTranslations;
-
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.graphic_eq, color: Colors.grey.shade600, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                'RECOGNIZING SIGN...',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'TRANSLATED TEXT',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 10,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                          isTtsEnabled ? Icons.volume_up : Icons.volume_off,
-                          color: isTtsEnabled
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey.shade400),
-                      onPressed: () {
-                        if (isTtsEnabled) {
-                          _speak('I Love You');
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Text-to-Speech is disabled. You can turn it on in Settings.'),
-                              behavior: SnackBarBehavior.floating,
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                      tooltip:
-                          isTtsEnabled ? 'Speak Translation' : 'TTS Disabled',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'I Love You',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Mahal kita',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+// Removed _buildSignToTextContent since it is now in SignToTextPanel
 }
