@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_tts/flutter_tts.dart';
 import '../account/account_view.dart';
 import 'widgets/text_to_sign_panel.dart';
 import 'widgets/sign_to_text_panel.dart';
@@ -25,7 +23,6 @@ class _TranslationViewState extends ConsumerState<TranslationView>
   TranslationMode _currentMode = TranslationMode.signToText;
   final TextEditingController _textController = TextEditingController();
   late stt.SpeechToText _speech;
-  final FlutterTts _flutterTts = FlutterTts();
   bool _isListening = false;
 
   bool _isTranslating = false;
@@ -50,43 +47,10 @@ class _TranslationViewState extends ConsumerState<TranslationView>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-
-    _initTts();
-  }
-
-  Future<void> _initTts() async {
-    await _flutterTts.setLanguage("en-US");
-    // Web and Desktop treat 0.5 as half-speed. Android treats 0.5 as normal.
-    await _flutterTts.setSpeechRate(kIsWeb ? 0.65 : 0.5);
-    await _flutterTts.setVolume(1.0);
-    await _flutterTts.setPitch(1.0);
-
-    final settings = ref.read(settingsProvider);
-    if (settings.ttsVoice != null) {
-      try {
-        final voices = await _flutterTts.getVoices;
-        if (voices != null) {
-          for (var voice in voices) {
-            if (voice is Map && voice['name'] == settings.ttsVoice) {
-              await _flutterTts
-                  .setVoice({"name": voice['name'], "locale": voice['locale']});
-              break;
-            }
-          }
-        }
-      } catch (_) {}
-    }
-  }
-
-  Future<void> _speak(String text) async {
-    final settings = ref.read(settingsProvider);
-    if (!settings.speakTranslations || text.trim().isEmpty) return;
-    await _flutterTts.speak(text);
   }
 
   @override
   void dispose() {
-    _flutterTts.stop();
     _pulseController.dispose();
     _textController.dispose();
     super.dispose();
@@ -119,7 +83,10 @@ class _TranslationViewState extends ConsumerState<TranslationView>
       final modeStr = _currentMode == TranslationMode.textToSign
           ? 'Text to Sign'
           : 'Sign to Text';
-      ref.read(historyProvider.notifier).addHistory(text, modeStr == 'Text to Sign' ? 'FSL Translation' : 'Spoken English', modeStr);
+      ref.read(historyProvider.notifier).addHistory(
+          text,
+          modeStr == 'Text to Sign' ? 'FSL Translation' : 'Spoken English',
+          modeStr);
     }
 
     try {
@@ -474,7 +441,4 @@ class _TranslationViewState extends ConsumerState<TranslationView>
       ),
     );
   }
-
-// Removed _buildTextToSignPlaceholder since it is now in TextToSignPanel
-// Removed _buildSignToTextContent since it is now in SignToTextPanel
 }
