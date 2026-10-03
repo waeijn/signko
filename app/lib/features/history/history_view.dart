@@ -1,48 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'history_service.dart';
+import 'providers/history_provider.dart';
 import '../settings/settings_provider.dart';
 
-class HistoryView extends ConsumerStatefulWidget {
+class HistoryView extends ConsumerWidget {
   const HistoryView({super.key});
 
   @override
-  ConsumerState<HistoryView> createState() => _HistoryViewState();
-}
-
-class _HistoryViewState extends ConsumerState<HistoryView> {
-  List<TranslationHistoryItem> _historyItems = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadHistory();
-  }
-
-  Future<void> _loadHistory() async {
-    final items = await HistoryService.getHistory();
-    if (mounted) {
-      setState(() {
-        _historyItems = items;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _clearHistory() async {
-    await HistoryService.clearHistory();
-    if (mounted) {
-      setState(() {
-        _historyItems = [];
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final saveHistory = ref.watch(settingsProvider).saveHistory;
+    final historyState = ref.watch(historyProvider);
+    final historyItems = historyState.items;
+    final isLoading = historyState.isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,7 +39,7 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        _clearHistory();
+                        ref.read(historyProvider.notifier).clearHistory();
                       },
                       child: const Text('Clear',
                           style: TextStyle(color: Colors.red)),
@@ -81,11 +51,11 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
           ),
         ],
       ),
-      body: _isLoading
+      body: isLoading && historyItems.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                if (!saveHistory && _historyItems.isNotEmpty)
+                if (!saveHistory && historyItems.isNotEmpty)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -107,7 +77,7 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                     ),
                   ),
                 Expanded(
-                  child: _historyItems.isEmpty
+                  child: historyItems.isEmpty
                       ? Center(
                           child: Padding(
                             padding:
@@ -146,9 +116,9 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.all(24.0),
-                          itemCount: _historyItems.length,
+                          itemCount: historyItems.length,
                           itemBuilder: (context, index) {
-                            final item = _historyItems[index];
+                            final item = historyItems[index];
 
                             // Grouping by Date header
                             bool showHeader = false;
@@ -157,31 +127,31 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                             if (index == 0) {
                               showHeader = true;
                             } else {
-                              final prevItem = _historyItems[index - 1];
-                              if (item.timestamp.day !=
-                                      prevItem.timestamp.day ||
-                                  item.timestamp.month !=
-                                      prevItem.timestamp.month ||
-                                  item.timestamp.year !=
-                                      prevItem.timestamp.year) {
+                              final prevItem = historyItems[index - 1];
+                              if (item.createdAt.day !=
+                                      prevItem.createdAt.day ||
+                                  item.createdAt.month !=
+                                      prevItem.createdAt.month ||
+                                  item.createdAt.year !=
+                                      prevItem.createdAt.year) {
                                 showHeader = true;
                               }
                             }
 
                             if (showHeader) {
                               final now = DateTime.now();
-                              if (item.timestamp.day == now.day &&
-                                  item.timestamp.month == now.month &&
-                                  item.timestamp.year == now.year) {
+                              if (item.createdAt.day == now.day &&
+                                  item.createdAt.month == now.month &&
+                                  item.createdAt.year == now.year) {
                                 headerText = 'Today';
                               } else {
                                 headerText = DateFormat('MMMM d, yyyy')
-                                    .format(item.timestamp);
+                                    .format(item.createdAt);
                               }
                             }
 
                             final timeFormatted =
-                                DateFormat('h:mm a').format(item.timestamp);
+                                DateFormat('h:mm a').format(item.createdAt);
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,10 +170,8 @@ class _HistoryViewState extends ConsumerState<HistoryView> {
                                   padding: const EdgeInsets.only(bottom: 12.0),
                                   child: _buildHistoryItem(
                                     context,
-                                    item.text,
-                                    item.mode == 'Text to Sign'
-                                        ? 'FSL Translation'
-                                        : 'Spoken English',
+                                    item.sourceText,
+                                    item.translatedText,
                                     item.mode,
                                     timeFormatted,
                                   ),

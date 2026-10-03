@@ -117,6 +117,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> updateProfile(String name, {String? currentPassword, String? newPassword}) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final body = <String, dynamic>{'name': name};
+      if (currentPassword != null && newPassword != null) {
+        body['current_password'] = currentPassword;
+        body['new_password'] = newPassword;
+      }
+      
+      final response = await ApiService.put('/auth/me', body);
+      
+      if (response.statusCode == 200) {
+        final updatedUser = UserModel.fromJson(jsonDecode(response.body));
+        state = state.copyWith(user: updatedUser, isLoading: false);
+        return true;
+      } else {
+        final errorMsg = jsonDecode(response.body)['detail'] ?? 'Update failed';
+        state = state.copyWith(isLoading: false, error: errorMsg);
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: 'Network error occurred');
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true);
     final prefs = await SharedPreferences.getInstance();

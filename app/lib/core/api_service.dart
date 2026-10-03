@@ -67,4 +67,21 @@ class ApiService {
       headers: headers,
     );
   }
+
+  static Future<http.Response> delete(String endpoint, {String? token}) async {
+    final headers = await _getHeaders(token);
+    return http.delete(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: headers,
+    );
+  }
+
+  static Future<http.Response> put(String endpoint, Map<String, dynamic> body, {String? token}) async {
+    final headers = await _getHeaders(token);
+    return http.put(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: headers,
+      body: jsonEncode(body),
+    );
+  }
 }
