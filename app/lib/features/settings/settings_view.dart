@@ -191,6 +191,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
+          _buildSwitchTile(context, 'Dark Mode', settings.isDarkMode, (v) {
+            settingsNotifier.toggleDarkMode(v);
+          }),
+          _buildSwitchTile(
+              context, 'Save translation history', settings.saveHistory, (v) {
+            settingsNotifier.toggleSaveHistory(v);
+          }),
           _buildSwitchTile(
               context, 'Auto-translate Sign to Text', settings.autoTranslate,
               (v) {
@@ -279,12 +286,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   )
                 : const SizedBox.shrink(),
           ),
-          _buildSwitchTile(
-              context, 'Save translation history', settings.saveHistory, (v) {
-            settingsNotifier.toggleSaveHistory(v);
-          }),
-          _buildSwitchTile(context, 'Dark Mode', settings.isDarkMode, (v) {
-            settingsNotifier.toggleDarkMode(v);
+          _buildSwitchTile(context, 'Show Gloves Telemetry', settings.showTelemetry, (v) {
+            settingsNotifier.toggleShowTelemetry(v);
           }),
           const SizedBox(height: 32),
           const Text('HARDWARE',

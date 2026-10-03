@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../auth/providers/auth_provider.dart';
 import '../auth/views/login_view.dart';
+import 'edit_profile_view.dart';
 
 class AccountView extends ConsumerWidget {
   const AccountView({super.key});
@@ -69,7 +70,9 @@ class AccountView extends ConsumerWidget {
             const SizedBox(height: 32),
 
             // Account Options
-            _buildAccountOption(context, Icons.person_outline, 'Edit Profile'),
+            _buildAccountOption(context, Icons.person_outline, 'Edit Profile', onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileView()));
+            }),
             const Divider(),
             _buildAccountOption(
                 context, Icons.notifications_outlined, 'Notifications'),
@@ -137,15 +140,16 @@ class AccountView extends ConsumerWidget {
   }
 
   Widget _buildAccountOption(
-      BuildContext context, IconData icon, String title) {
+      BuildContext context, IconData icon, String title, {VoidCallback? onTap}) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
       trailing:
           const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       contentPadding: EdgeInsets.zero,
-      onTap: () {
-        // TODO: Handle navigation
+      onTap: onTap ?? () {
+        // Handle mock navigation
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$title is coming soon!')));
       },
     );
   }

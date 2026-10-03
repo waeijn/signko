@@ -12,9 +12,30 @@ from app.core.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, TokenResponse
+from app.schemas.user import UserCreate, UserResponse, TokenResponse, UserUpdate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+@router.put("/me", response_model=UserResponse)
+def update_user_me(
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if user_update.name is not None:
+        current_user.name = user_update.name
+        
+    if user_update.new_password is not None:
+        if not user_update.current_password or not verify_password(user_update.current_password, current_user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Incorrect current password"
+            )
+        current_user.hashed_password = get_password_hash(user_update.new_password)
+        
+    db.commit()
+    db.refresh(current_user)
+    return current_user
 
 @router.post("/register", response_model=TokenResponse)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
