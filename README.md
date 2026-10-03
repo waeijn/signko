@@ -61,27 +61,45 @@ signko/
 └── ml_pipeline/                    # Raw sensor datasets and Python data processing scripts
 ```
 
-## Getting Started
+## Getting Started (Windows)
 
-### Backend Setup (Docker)
+We have automated scripts to get the entire stack (Flutter + Docker + FastAPI + Postgres) running locally in minutes.
 
-1. Ensure you have Docker and Docker Compose installed.
-2. In the root directory, run `docker-compose up -d --build` to spin up the FastAPI and PostgreSQL containers.
-3. The backend will be available at `http://127.0.0.1:8000`.
+### Prerequisites
 
-### Hardware Setup
+1. **Docker Desktop** (must be running)
+2. **Flutter SDK** (must be in your PATH)
+3. **Microsoft Edge** or **Google Chrome** (for web testing)
+
+### Initial Setup (One-time)
+
+Clone the repository and run the setup script from your terminal (PowerShell):
+
+```powershell
+# Installs Flutter dependencies, builds Docker images, and seeds the PostgreSQL database
+.\setup.ps1
+```
+
+### Starting the Environment
+
+Whenever you want to work on the app, simply run the start script. This will boot the Docker backend and launch the Flutter app in Microsoft Edge automatically:
+
+```powershell
+.\start_all.ps1
+```
+
+To gracefully shut down the backend and clean up, run:
+
+```powershell
+.\stop_all.ps1
+```
+
+### Hardware Setup (Optional for UI Dev)
 
 1. Navigate to the `embedded/` directory.
 2. Open the project in Visual Studio Code with the PlatformIO extension installed.
 3. Connect the ESP32 board via USB.
 4. Build and upload the firmware using the PlatformIO interface. Ensure the correct COM port is selected.
-
-### Mobile App Setup
-
-1. Ensure you have the Flutter SDK installed and configured.
-2. Navigate to the `app/` directory in your terminal.
-3. Run `flutter pub get` to fetch all necessary dependencies.
-4. Run `flutter run` to build and deploy the application to your device (Web, Edge, Android, or iOS). Note: BLE functionality requires a physical device.
 
 ## Usage Instructions
 
