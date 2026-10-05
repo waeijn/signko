@@ -148,8 +148,13 @@ class AccountView extends ConsumerWidget {
           const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       contentPadding: EdgeInsets.zero,
       onTap: onTap ?? () {
-        // Handle mock navigation
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$title is coming soon!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$title is coming soon!'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
       },
     );
   }

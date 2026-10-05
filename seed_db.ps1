@@ -5,3 +5,6 @@ Write-Host "Seeding default user into the database..." -ForegroundColor Cyan
 docker compose exec backend python app/scripts/seed_user.py
 
 Write-Host "Seeding complete." -ForegroundColor Green
+
+Write-Host "Seeding FSL dictionary mappings..." -ForegroundColor Cyan
+docker compose exec backend python app/scripts/seed_dictionary.py

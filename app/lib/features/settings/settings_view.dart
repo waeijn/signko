@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import '../hardware/calibration_view.dart';
 import 'settings_provider.dart';
 
 class VoiceOption {
@@ -297,8 +298,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
-          _buildListTile('Calibrate Gloves', Icons.pan_tool_outlined),
-          _buildListTile('Firmware Update', Icons.system_update_outlined),
+          _buildListTile(context, 'Calibrate Gloves', Icons.pan_tool_outlined, onTap: () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const CalibrationView()));
+          }),
+          _buildListTile(context, 'Firmware Update', Icons.system_update_outlined),
           const SizedBox(height: 32),
           const Text('ABOUT',
               style: TextStyle(
@@ -307,9 +310,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
-          _buildListTile('Help & FAQ', Icons.help_outline),
-          _buildListTile('Privacy Policy', Icons.privacy_tip_outlined),
-          _buildListTile('About SignKo', Icons.info_outline),
+          _buildListTile(context, 'Help & FAQ', Icons.help_outline),
+          _buildListTile(context, 'Privacy Policy', Icons.privacy_tip_outlined),
+          _buildListTile(context, 'About SignKo', Icons.info_outline),
           const SizedBox(height: 40),
           Center(
             child: Text('Version 1.0.0',
@@ -342,20 +345,31 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     );
   }
 
-  Widget _buildListTile(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade600, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(title,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+  Widget _buildListTile(BuildContext context, String title, IconData icon, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap ?? () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$title is coming soon!'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
-          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
-        ],
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.grey.shade600, size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(title,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+          ],
+        ),
       ),
     );
   }
