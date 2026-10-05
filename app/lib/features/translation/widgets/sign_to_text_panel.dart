@@ -425,7 +425,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
             child: ElevatedButton.icon(
               onPressed: _isRunning ? _stopSimulation : _startSimulation,
               icon: Icon(
-                _isRunning ? Icons.stop : Icons.back_hand,
+                _isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
                 size: 24,
               ),
               label: Text(
