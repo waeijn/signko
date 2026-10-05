@@ -26,6 +26,7 @@ If your app starts acting weird, lagging heavily, or throwing network errors, fo
 
 4. **Launch the Flutter Frontend**
    Clean the build cache and launch the app:
+
    ```bash
    cd app
    flutter clean
