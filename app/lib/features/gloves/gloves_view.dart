@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../hardware/calibration_view.dart';
 
 class GlovesView extends StatelessWidget {
   const GlovesView({super.key});
@@ -78,9 +79,14 @@ class GlovesView extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CalibrationView()),
+                );
+              },
               icon: const Icon(Icons.add),
-              label: const Text('Pair New Gloves'),
+              label: const Text('Pair & Calibrate Gloves'),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     Theme.of(context).colorScheme.surfaceContainerHighest,

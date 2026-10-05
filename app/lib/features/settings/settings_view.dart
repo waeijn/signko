@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import '../hardware/calibration_view.dart';
 import 'settings_provider.dart';
 
 class VoiceOption {
@@ -297,7 +298,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
-          _buildListTile(context, 'Calibrate Gloves', Icons.pan_tool_outlined),
+          _buildListTile(context, 'Calibrate Gloves', Icons.pan_tool_outlined, onTap: () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const CalibrationView()));
+          }),
           _buildListTile(context, 'Firmware Update', Icons.system_update_outlined),
           const SizedBox(height: 32),
           const Text('ABOUT',
