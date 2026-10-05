@@ -1,15 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
-from app.models import translation, user, history
+from app.models import translation, user, history, dictionary
 from app.api.routes import router as translate_router
 from app.api.auth import router as auth_router
 from app.api.history import router as history_router
+from app.api.dictionary import router as dictionary_router
 
 # Auto-create all tables in the database when the app starts
 translation.Base.metadata.create_all(bind=engine)
 user.Base.metadata.create_all(bind=engine)
 history.Base.metadata.create_all(bind=engine)
+dictionary.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="SignKo Backend",
@@ -30,6 +32,7 @@ app.add_middleware(
 app.include_router(translate_router)
 app.include_router(auth_router)
 app.include_router(history_router)
+app.include_router(dictionary_router, prefix="/api/dictionary", tags=["dictionary"])
 
 @app.get("/")
 def read_root():
