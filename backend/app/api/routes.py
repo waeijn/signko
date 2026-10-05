@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_api_key
 from app.models.translation import TranslationRecord
+from app.models.dictionary import Dictionary, MediaType
 from app.schemas.translation import TranslationRequest, TranslationResponse, TranslationCreate
 
 router = APIRouter()
@@ -12,15 +13,15 @@ def translate_text(request: TranslationRequest, db: Session = Depends(get_db), a
     # 1. Normalize the text (lowercase and strip spaces)
     text = request.text.lower().strip()
     
-    # 2. Query the PostgreSQL database for a matching translation
-    record = db.query(TranslationRecord).filter(TranslationRecord.source_text == text).first()
+    # 2. Query the PostgreSQL dictionary for a matching translation
+    record = db.query(Dictionary).filter(Dictionary.word == text).first()
     
     # 3. If found, return the mapped media.
     if record:
         return TranslationResponse(
             original_text=request.text,
-            media_path=record.media_path,
-            media_type=record.media_type
+            media_path=record.file_path,
+            media_type=record.media_type.value
         )
     
     # 4. Fallback: Fingerspelling Sequence
