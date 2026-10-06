@@ -8,29 +8,19 @@ If your app starts acting weird, lagging heavily, or throwing network errors, fo
 
 1. **Stop Everything**
    - Press `q` in your Flutter terminal (or hit Stop in your IDE).
-   - Stop the backend by running: `docker compose down`
+   - Stop the backend by running: `.\stop_all.ps1`
    - **Crucial:** Close your Edge/Chrome browser tab. (Flutter Web CanvasKit leaks RAM heavily if you just keep Hot Restarting without ever closing the tab).
 
-2. **Start the Backend**
-
+2. **Start the Environment**
+   Run the automated start script to boot the Docker backend, clean the Flutter cache, and launch the app:
    ```bash
-   docker compose up -d
+   .\start_all.ps1
    ```
 
 3. **(Optional) Seed the Database**
-   Since the database volume persists, you usually only need to run this once. If you wiped your volumes, run this to recreate the default `dev@signko.com` (password: `password`) user:
-
+   Since the database volume persists, you usually only need to run this once. If you wiped your volumes, run this to recreate the default user and dictionary:
    ```bash
-   docker compose exec backend python app/scripts/seed_user.py
-   ```
-
-4. **Launch the Flutter Frontend**
-   Clean the build cache and launch the app:
-
-   ```bash
-   cd app
-   flutter clean
-   flutter run -d edge
+   .\seed_db.ps1
    ```
 
 ## Known Quirks & Fixes
