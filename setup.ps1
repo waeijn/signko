@@ -24,6 +24,16 @@ if (!(Get-Command "flutter" -ErrorAction SilentlyContinue)) {
 Write-Host "Dependencies found. Proceeding..." -ForegroundColor Green
 Write-Host ""
 
+# 1.5. Setup Environment Variables
+Write-Host "Checking environment variables..." -ForegroundColor Yellow
+if (!(Test-Path ".env")) {
+    Write-Host "No .env file found. Creating one from .env.example..." -ForegroundColor Cyan
+    Copy-Item ".env.example" ".env"
+} else {
+    Write-Host ".env file already exists." -ForegroundColor Green
+}
+Write-Host ""
+
 # 2. Setup Flutter frontend
 Write-Host "Fetching Flutter dependencies..." -ForegroundColor Yellow
 Set-Location "app"
