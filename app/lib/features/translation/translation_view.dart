@@ -8,6 +8,7 @@ import 'widgets/text_to_sign_panel.dart';
 import 'widgets/sign_to_text_panel.dart';
 import '../history/providers/history_provider.dart';
 import '../settings/settings_provider.dart';
+import '../../core/api_service.dart';
 
 enum TranslationMode { signToText, textToSign }
 
@@ -90,9 +91,9 @@ class _TranslationViewState extends ConsumerState<TranslationView>
     }
 
     try {
-      // Connect to the local FastAPI backend (127.0.0.1 since we are on Web/Edge)
+      // Connect to the FastAPI backend dynamically using the shared ApiService
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/translate'),
+        Uri.parse('${ApiService.baseUrl}/translate'),
         headers: {
           'Content-Type': 'application/json',
           'X-API-Key': 'signko_dev_api_key_998877', // Our secret API key
