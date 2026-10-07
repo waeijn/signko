@@ -8,7 +8,12 @@ import 'package:flutter/foundation.dart'
 class ApiService {
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://127.0.0.1:8000';
+      // Dynamically use the host IP instead of hardcoding 127.0.0.1
+      // This allows accessing the web app from other devices on the LAN
+      final host = Uri.base.host;
+      // If we are running locally as a file or without a proper host, fallback to localhost
+      final effectiveHost = (host.isEmpty) ? '127.0.0.1' : host;
+      return 'http://$effectiveHost:8000';
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:8000'; // Android emulator localhost
     } else {
