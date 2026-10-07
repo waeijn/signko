@@ -61,9 +61,9 @@ signko/
 └── ml_pipeline/                    # Raw sensor datasets and Python data processing scripts
 ```
 
-## Getting Started (Windows)
+## Local Development Setup
 
-We have automated scripts to get the entire stack (Flutter + Docker + FastAPI + Postgres) running locally in minutes.
+We have automated scripts to get the entire stack (Flutter + Docker + FastAPI + Postgres) running locally in minutes on Windows.
 
 ### Prerequisites
 
@@ -71,18 +71,18 @@ We have automated scripts to get the entire stack (Flutter + Docker + FastAPI + 
 2. **Flutter SDK** (must be in your PATH)
 3. **Microsoft Edge** or **Google Chrome** (for web testing)
 
-### Initial Setup (One-time)
+### 1-Click Installation
 
 Clone the repository and run the setup script from your terminal (PowerShell):
 
 ```powershell
-# Installs Flutter dependencies, builds Docker images, and seeds the PostgreSQL database
+# Automatically generates .env, installs dependencies, builds Docker images, and seeds the database
 .\setup.ps1
 ```
 
-### Starting the Environment
+### Running the Environment
 
-Whenever you want to work on the app, simply run the start script. This will boot the Docker backend and launch the Flutter app in Microsoft Edge automatically:
+Whenever you want to work on the app, simply run the start script. This boots the backend and launches the Flutter app in your browser:
 
 ```powershell
 .\start_all.ps1
@@ -94,20 +94,18 @@ To gracefully shut down the backend and clean up, run:
 .\stop_all.ps1
 ```
 
-### Hardware Setup (Optional for UI Dev)
+## App Navigation & Usage
+
+1. **Hardware Calibration:** Navigate to the **Hardware** tab (or Settings) and tap **Pair & Calibrate Gloves**. This launches a 4-step interactive flow to connect the ESP32 gloves via Bluetooth and calibrate the flex sensors (Rest Pose vs. Fist Pose).
+2. **Sign-to-Text Mode:** In the **Translation** tab, select the "Sign to Text" toggle. Tap the play button to start listening to glove telemetry. Recognized FSL gestures will appear on screen and can be spoken aloud via TTS.
+3. **Text-to-Sign Mode:** Switch to the "Text to Sign" toggle. Type a phrase or tap the microphone to use Speech-to-Text. The app will query the backend and render the corresponding FSL video clip or fingerspelling sequence.
+
+## Embedded Hardware Setup (For Firmware Devs)
 
 1. Navigate to the `embedded/` directory.
 2. Open the project in Visual Studio Code with the PlatformIO extension installed.
 3. Connect the ESP32 board via USB.
 4. Build and upload the firmware using the PlatformIO interface. Ensure the correct COM port is selected.
-
-## Usage Instructions
-
-1. Power on the ESP32 sensor gloves.
-2. Open the SignKo app on your mobile device and grant Bluetooth and Microphone permissions.
-3. Navigate to the **Connect** tab and select the gloves from the list of available BLE devices.
-4. Once the status indicates **Connected**, the DHH user can begin signing. Recognized FSL gestures will automatically appear in the chat view and play aloud.
-5. The hearing user can tap the microphone icon to speak. The app will transcribe the speech and play the video or display the image of the corresponding FSL sign.
 
 ## Contributing
 
