@@ -117,10 +117,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> updateProfile(String name, {String? currentPassword, String? newPassword}) async {
+  Future<bool> updateProfile(String name, {String? avatarUrl, String? currentPassword, String? newPassword}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final body = <String, dynamic>{'name': name};
+      if (avatarUrl != null) {
+        body['avatar_url'] = avatarUrl;
+      }
       if (currentPassword != null && newPassword != null) {
         body['current_password'] = currentPassword;
         body['new_password'] = newPassword;

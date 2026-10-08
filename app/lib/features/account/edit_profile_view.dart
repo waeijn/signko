@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../auth/providers/auth_provider.dart';
 
 class EditProfileView extends ConsumerStatefulWidget {
@@ -14,15 +16,19 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   final _nameController = TextEditingController();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
+  
   bool _isPasswordSectionVisible = false;
+  String? _selectedAvatarBase64;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    // Initialize with current user's name
+    // Initialize with current user's data
     final user = ref.read(authProvider).user;
     if (user != null) {
       _nameController.text = user.name;
+      _selectedAvatarBase64 = user.avatarUrl;
     }
   }
 
@@ -34,6 +40,32 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 70,
+      );
+      
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        final base64String = base64Encode(bytes);
+        // Prefix with data URI scheme so it can be directly used in Image.memory or Network
+        setState(() {
+          _selectedAvatarBase64 = 'data:image/jpeg;base64,$base64String';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to pick image'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   void _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -43,6 +75,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     
     final success = await ref.read(authProvider.notifier).updateProfile(
       name,
+      avatarUrl: _selectedAvatarBase64,
       currentPassword: currentPassword.isNotEmpty ? currentPassword : null,
       newPassword: newPassword.isNotEmpty ? newPassword : null,
     );
@@ -73,9 +106,41 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text('Display Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              // Avatar Picker
+              GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      backgroundImage: _selectedAvatarBase64 != null
+                          ? MemoryImage(base64Decode(_selectedAvatarBase64!.split(',').last))
+                          : null,
+                      child: _selectedAvatarBase64 == null
+                          ? Icon(Icons.person, size: 50, color: Theme.of(context).colorScheme.primary)
+                          : null,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Display Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
