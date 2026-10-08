@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -34,15 +35,20 @@ class AccountView extends ConsumerWidget {
             // Avatar
             CircleAvatar(
               radius: 60,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Text(
-                user != null ? user.name[0].toUpperCase() : '?',
-                style: const TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundImage: user?.avatarUrl != null && user!.avatarUrl!.startsWith('data:image')
+                  ? MemoryImage(base64Decode(user.avatarUrl!.split(',').last))
+                  : null,
+              child: user?.avatarUrl == null || !user!.avatarUrl!.startsWith('data:image')
+                  ? Text(
+                      user != null ? user.name[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(height: 16),
 

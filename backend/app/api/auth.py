@@ -25,6 +25,9 @@ def update_user_me(
     if user_update.name is not None:
         current_user.name = user_update.name
         
+    if user_update.avatar_url is not None:
+        current_user.avatar_url = user_update.avatar_url
+        
     if user_update.new_password is not None:
         if not user_update.current_password or not verify_password(user_update.current_password, current_user.hashed_password):
             raise HTTPException(

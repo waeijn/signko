@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../gloves/glove_simulator.dart';
 import '../../settings/settings_provider.dart';
 import '../../history/providers/history_provider.dart';
@@ -187,7 +188,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
@@ -202,137 +203,166 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+          // Header Row (Action Buttons)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(
-                'TRANSLATED TEXT',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
+              IconButton(
+                icon: Icon(
+                  Icons.volume_up,
+                  color: _fullSentence.isNotEmpty
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  size: 24,
                 ),
+                onPressed: _fullSentence.isNotEmpty
+                    ? () => _tts.speak(_fullSentence.trim())
+                    : null,
+                tooltip: 'Speak translation',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.volume_up,
-                      color: _fullSentence.isNotEmpty
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                      size: 24,
-                    ),
-                    onPressed: _fullSentence.isNotEmpty
-                        ? () => _tts.speak(_fullSentence.trim())
-                        : null,
-                    tooltip: 'Speak translation',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    icon: Icon(
-                      Icons.refresh,
-                      color: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
-                          ? Colors.red
-                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                      size: 24,
-                    ),
-                    onPressed: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
-                        ? () {
-                            setState(() {
-                              _fullSentence = '';
-                              _currentWord = '';
-                              _lastClassifiedLetter = '';
-                              _confidence = 0.0;
-                              _terminalLines.clear();
-                            });
-                          }
-                        : null,
-                    tooltip: 'Reset translation',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  if (_isRunning) ...[
-                    const SizedBox(width: 16),
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'LIVE',
-                      style: TextStyle(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ],
+              const SizedBox(width: 12),
+              IconButton(
+                icon: Icon(
+                  Icons.refresh,
+                  color: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
+                      ? Colors.red
+                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  size: 24,
+                ),
+                onPressed: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
+                    ? () {
+                        setState(() {
+                          _fullSentence = '';
+                          _currentWord = '';
+                          _lastClassifiedLetter = '';
+                          _confidence = 0.0;
+                          _terminalLines.clear();
+                        });
+                      }
+                    : null,
+                tooltip: 'Reset translation',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
+              if (_isRunning) ...[
+                const SizedBox(width: 16),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Colors.redAccent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Text(
+                  'LIVE',
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
             ],
           ),
-
-          const Spacer(),
-
-          // Translated Text Display
-          Center(
-            child: Text(
-              _fullSentence.isEmpty && _currentWord.isEmpty
-                  ? 'Waiting for input...'
-                  : '$_fullSentence$_currentWord',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 32,
-                height: 1.2,
-                fontWeight: FontWeight.w800,
-                color: _fullSentence.isEmpty && _currentWord.isEmpty
-                    ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)
-                    : theme.colorScheme.onSurface,
+          
+          const SizedBox(height: 16), // Space between buttons and text
+          
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _fullSentence.isEmpty && _currentWord.isEmpty
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: theme.brightness == Brightness.dark
+                                      ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                                      : theme.colorScheme.primary.withValues(alpha: 0.05),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.waving_hand,
+                                  size: 64,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              if (!_isTerminalExpanded) ...[
+                                const SizedBox(height: 24),
+                                Text(
+                                  'Ready for Signs',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Tap "Start Translating" and perform\ngestures with your SignKo gloves.',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          )
+                        : Text(
+                            '$_fullSentence$_currentWord',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 32,
+                              height: 1.2,
+                              fontWeight: FontWeight.w800,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                    if (_currentWord.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Spelling: ',
+                            style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                          ),
+                          Text(
+                            _currentWord,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                              letterSpacing: 3.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
-          if (_currentWord.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Spelling: ',
-                    style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  Text(
-                    _currentWord,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                      letterSpacing: 3.0,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          const Spacer(),
 
           // Gesture Visual Box & Confidence Bar
+          // Gesture Visual Box & Action Control Bar
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                   color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
             ),
@@ -377,34 +407,31 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Confidence',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            '${(_confidence * 100).toStringAsFixed(1)}%',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
-                              color: _isRunning ? confColor : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Confidence',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${(_confidence * 100).toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: _isRunning ? confColor : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6),
                         child: LinearProgressIndicator(
                           value: _isRunning ? _confidence : 0,
-                          minHeight: 8,
+                          minHeight: 6,
                           backgroundColor: theme.colorScheme.outlineVariant
                               .withValues(alpha: 0.3),
                           valueColor: AlwaysStoppedAnimation<Color>(confColor),
@@ -413,41 +440,68 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                     ],
                   ),
                 ),
+
+                // Compact Mode: Inline Action Button (Only visible if terminal expanded)
+                if (_isTerminalExpanded) ...[
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isRunning ? _stopSimulation : _startSimulation,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        backgroundColor: _isRunning ? Colors.red.shade600 : theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Icon(
+                        _isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                        size: 32,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 24),
           
-          // Primary Action Button (Start/Stop)
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton.icon(
-              onPressed: _isRunning ? _stopSimulation : _startSimulation,
-              icon: Icon(
-                _isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                size: 24,
-              ),
-              label: Text(
-                _isRunning ? 'Stop Translating' : 'Start Translating',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+          // Full-size Action Button (Hidden when terminal is expanded to save space)
+          if (!_isTerminalExpanded) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: _isRunning ? _stopSimulation : _startSimulation,
+                icon: Icon(
+                  _isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                  size: 24,
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isRunning
-                    ? Colors.red.shade600
-                    : theme.colorScheme.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                label: Text(
+                  _isRunning ? 'Stop Translating' : 'Start Translating',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isRunning
+                      ? Colors.red.shade600
+                      : theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
