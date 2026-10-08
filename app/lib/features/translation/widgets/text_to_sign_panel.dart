@@ -289,21 +289,37 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundColor:
-                isDark ? const Color(0xFF2A3357) : const Color(0xFFF8FAFC),
-          ),
-          const SizedBox(height: 16),
           Container(
-            height: 100,
-            width: 200,
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2A3357) : const Color(0xFFF8FAFC),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(100),
-                topRight: Radius.circular(100),
-              ),
+              color: isDark 
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) 
+                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.sign_language,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Ready to Translate',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Type a phrase or tap the microphone\nto see it in sign language.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.5,
             ),
           ),
         ],

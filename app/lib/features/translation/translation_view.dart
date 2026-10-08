@@ -187,11 +187,12 @@ class _TranslationViewState extends ConsumerState<TranslationView>
         appBar: AppBar(
           elevation: 0,
           centerTitle: false,
-          title: Padding(
-            padding: const EdgeInsets.only(left: 12.0),
+          title: Transform.translate(
+            offset: const Offset(-12.0,
+                0), // Pulls the image left to counteract its internal transparent padding
             child: Transform.scale(
-              scale:
-                  2.5, // Scales up the image to counteract the large 512x512 transparent padding
+              scale: 3.0,
+              alignment: Alignment.centerLeft,
               child: Image.asset(
                 'assets/logo/text.png',
                 height: 32,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../gloves/glove_simulator.dart';
 import '../../settings/settings_provider.dart';
 import '../../history/providers/history_provider.dart';
@@ -202,22 +203,11 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+          // Header Row (Action Buttons)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(
-                'TRANSLATED TEXT',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
+              IconButton(
                     icon: Icon(
                       Icons.volume_up,
                       color: _fullSentence.isNotEmpty
@@ -276,9 +266,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                         letterSpacing: 1.2,
                       ),
                     ),
-                  ],
-                ],
-              ),
+              ],
             ],
           ),
 
@@ -286,20 +274,55 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
 
           // Translated Text Display
           Center(
-            child: Text(
-              _fullSentence.isEmpty && _currentWord.isEmpty
-                  ? 'Waiting for input...'
-                  : '$_fullSentence$_currentWord',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 32,
-                height: 1.2,
-                fontWeight: FontWeight.w800,
-                color: _fullSentence.isEmpty && _currentWord.isEmpty
-                    ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)
-                    : theme.colorScheme.onSurface,
-              ),
-            ),
+            child: _fullSentence.isEmpty && _currentWord.isEmpty
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: theme.brightness == Brightness.dark
+                              ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                              : theme.colorScheme.primary.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.waving_hand,
+                          size: 64,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Ready for Signs',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap "Start Translating" and perform\ngestures with your SignKo gloves.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    '$_fullSentence$_currentWord',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      height: 1.2,
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
           ),
           if (_currentWord.isNotEmpty) ...[
             const SizedBox(height: 12),
