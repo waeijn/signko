@@ -26,42 +26,76 @@ class TextToSignPanel extends StatefulWidget {
 class _TextToSignPanelState extends State<TextToSignPanel> {
   int _selectedWordIndex = -1; // -1 means [All]
 
-  // Mock list of 30 dynamic words
+  // Official list of 30 FSL words and phrases (both English and Filipino) plus numbers
   final List<String> _dynamicVocabulary = [
-    'hello',
-    'world',
-    'please',
-    'thank',
-    'you',
-    'sorry',
-    'yes',
-    'no',
-    'help',
-    'love',
-    'name',
-    'what',
-    'where',
-    'when',
-    'why',
-    'how',
-    'good',
-    'bad',
-    'happy',
-    'sad',
-    'angry',
-    'eat',
-    'drink',
-    'sleep',
-    'time',
-    'day',
-    'night',
-    'today',
-    'tomorrow',
-    'yesterday'
+    // 1. Good Day (Magandang Araw)
+    'good day', 'goodday', 'magandang araw', 'magandangaraw',
+    // 2. Good Night (Magandang Gabi)
+    'good night', 'goodnight', 'magandang gabi', 'magandanggabi',
+    // 3. Thank You (Salamat)
+    'thank you', 'thankyou', 'salamat',
+    // 4. You\'re Welcome (Walang anuman)
+    'youre welcome', 'you\'re welcome', 'yourewelcome', 'walang anuman', 'walanganuman',
+    // 5. Take Care (Ingat ka)
+    'take care', 'takecare', 'ingat ka', 'ingatka', 'ingat',
+    // 6. Sick (May sakit)
+    'sick', 'may sakit', 'maysakit',
+    // 7. Invent (Imbento)
+    'invent', 'imbento',
+    // 8. House (Bahay)
+    'house', 'bahay',
+    // 9. Read (Basa)
+    'read', 'basa',
+    // 10. Again (Ulit)
+    'again', 'ulit',
+    // 11. Why? (Bakit?)
+    'why', 'bakit',
+    // 12. Where? (Saan?)
+    'where', 'saan',
+    // 13. Which? (Alin?)
+    'which', 'alin',
+    // 14. Friend (Kaibigan)
+    'friend', 'kaibigan',
+    // 15. Who? (Sino?)
+    'who', 'sino',
+    // 16. Sweetheart
+    'sweetheart',
+    // 17. Yes (Oo)
+    'yes', 'oo',
+    // 18. No (Hindi)
+    'no', 'hindi',
+    // 19. I\'m Sorry (Pasensya na)
+    'im sorry', 'i\'m sorry', 'imsorry', 'sorry', 'pasensya na', 'pasensyana', 'pasensya',
+    // 20. When? (Kailan?)
+    'when', 'kailan',
+    // 21. I understand (Naiintindihan ko)
+    'i understand', 'iunderstand', 'naiintindihan ko', 'naiintindihanko',
+    // 22. I\'m going home (Uwi na ako)
+    'im going home', 'i\'m going home', 'imgoinghome', 'uwi na ako', 'uwinaako',
+    // 23. I don\'t understand (Hindi ko naiintindihan)
+    'i dont understand', 'i don\'t understand', 'idontunderstand', 'hindi ko naiintindihan', 'hindikonaiintindihan',
+    // 24. Lecture (Lektyur)
+    'lecture', 'lektyur',
+    // 25. School (Paaralan)
+    'school', 'paaralan',
+    // 26. I don\'t care (Wala akong pakialam)
+    'i dont care', 'i don\'t care', 'idontcare', 'wala akong pakialam', 'walaakongpakialam',
+    // 27. I Love You (Mahal kita)
+    'i love you', 'iloveyou', 'mahal kita', 'mahalkita',
+    // 28. Aklat (Book)
+    'book', 'aklat',
+    // 29. I Hate You (Galit ako sayo)
+    'i hate you', 'ihateyou', 'galit ako sayo', 'galitakosayo',
+    // 30. Please (Paki)
+    'please', 'paki',
+    // Numbers 1 to 10
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+    'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+    'isa', 'dalawa', 'tatlo', 'apat', 'lima', 'anim', 'pito', 'walo', 'siyam', 'sampu',
   ];
 
   bool isDynamicWord(String word) {
-    final cleanWord = word.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase();
+    final cleanWord = word.replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '').trim().toLowerCase();
     return _dynamicVocabulary.contains(cleanWord);
   }
 

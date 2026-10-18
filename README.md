@@ -100,6 +100,15 @@ To gracefully shut down the backend and clean up, run:
 2. **Sign-to-Text Mode:** In the **Translation** tab, select the "Sign to Text" toggle. Tap the play button to start listening to glove telemetry. Recognized FSL gestures will appear on screen and can be spoken aloud via TTS.
 3. **Text-to-Sign Mode:** Switch to the "Text to Sign" toggle. Type a phrase or tap the microphone to use Speech-to-Text. The app will query the backend and render the corresponding FSL video clip or fingerspelling sequence.
 
+## Supported FSL Dataset
+
+SignKo supports an official bilingual Filipino Sign Language (FSL) dataset covering:
+- **Alphabet (26 Letters):** Complete fingerspelling sequence (Aa to Zz) rendered as dynamic character cards.
+- **Numbers (1 to 10):** Numeric digits, English words (`one` to `ten`), and Filipino words (`isa` to `sampu`).
+- **Words and Phrases (30 Bilingual Entries):** Conversational signs covering greetings, questions, courtesies, school/home terminology, and common phrases in both English and Filipino (Tagalog).
+
+For the full list of database query keys, Filipino translations, and media asset paths, refer to the [FSL Vocabulary & Dataset Reference](docs/fsl_vocabulary.md).
+
 ## Embedded Hardware Setup (For Firmware Devs)
 
 1. Navigate to the `embedded/` directory.

@@ -10,11 +10,17 @@ router = APIRouter()
 
 @router.post("/translate", response_model=TranslationResponse)
 def translate_text(request: TranslationRequest, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    # 1. Normalize the text (lowercase and strip spaces)
-    text = request.text.lower().strip()
+    # 1. Normalize the text (lowercase, stripped, and punctuation-cleaned variants)
+    raw_text = request.text.lower().strip()
+    clean_alphanumeric = "".join(c for c in raw_text if c.isalnum())
+    normalized_phrase = " ".join("".join(c for c in raw_text if c.isalnum() or c.isspace()).split())
     
     # 2. Query the PostgreSQL dictionary for a matching translation
-    record = db.query(Dictionary).filter(Dictionary.word == text).first()
+    record = db.query(Dictionary).filter(
+        (Dictionary.word == raw_text) |
+        (Dictionary.word == normalized_phrase) |
+        (Dictionary.word == clean_alphanumeric)
+    ).first()
     
     # 3. If found, return the mapped media.
     if record:
@@ -26,7 +32,7 @@ def translate_text(request: TranslationRequest, db: Session = Depends(get_db), a
     
     # 4. Fallback: Fingerspelling Sequence
     # We split by spaces to handle multiple words, so they can be on new lines
-    words = text.split()
+    words = raw_text.split()
     sequence = []
     
     for word in words:
