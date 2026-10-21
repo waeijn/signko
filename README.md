@@ -118,7 +118,7 @@ For the full list of database query keys, Filipino translations, and media asset
 
 ## Contributing
 
-Please refer to the [`.agentrules`](./.agentrules) file for general workspace guidelines, code quality expectations, and commit message conventions.
+Please refer to the [`AGENTS.md`](./AGENTS.md) file for general workspace guidelines, code quality expectations, and commit message conventions.
 
 ## License
 
