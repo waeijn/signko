@@ -287,7 +287,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   )
                 : const SizedBox.shrink(),
           ),
-          _buildSwitchTile(context, 'Show Gloves Telemetry', settings.showTelemetry, (v) {
+          _buildSwitchTile(
+              context, 'Show Gloves Telemetry', settings.showTelemetry, (v) {
             settingsNotifier.toggleShowTelemetry(v);
           }),
           const SizedBox(height: 32),
@@ -298,10 +299,21 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
-          _buildListTile(context, 'Calibrate Gloves', Icons.pan_tool_outlined, onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const CalibrationView()));
+          _buildSwitchTile(
+              context, 'Glove Haptic Alerts', settings.hapticAlerts, (v) {
+            settingsNotifier.toggleHapticAlerts(v);
           }),
-          _buildListTile(context, 'Firmware Update', Icons.system_update_outlined),
+          _buildSwitchTile(context, 'Haptic Word Confirmation',
+              settings.hapticWordConfirmation, (v) {
+            settingsNotifier.toggleHapticWordConfirmation(v);
+          }),
+          _buildListTile(context, 'Calibrate Gloves', Icons.pan_tool_outlined,
+              onTap: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const CalibrationView()));
+          }),
+          _buildListTile(
+              context, 'Firmware Update', Icons.system_update_outlined),
           const SizedBox(height: 32),
           const Text('ABOUT',
               style: TextStyle(
@@ -311,7 +323,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
           _buildListTile(context, 'Help & FAQ', Icons.help_outline),
-          _buildListTile(context, 'Privacy Policy', Icons.privacy_tip_outlined),
+          _buildListTile(
+              context, 'Privacy Policy', Icons.privacy_tip_outlined),
           _buildListTile(context, 'About SignKo', Icons.info_outline),
           const SizedBox(height: 40),
           Center(
@@ -345,17 +358,19 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     );
   }
 
-  Widget _buildListTile(BuildContext context, String title, IconData icon, {VoidCallback? onTap}) {
+  Widget _buildListTile(BuildContext context, String title, IconData icon,
+      {VoidCallback? onTap}) {
     return InkWell(
-      onTap: onTap ?? () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$title is coming soon!'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
-      },
+      onTap: onTap ??
+          () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$title is coming soon!'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+            );
+          },
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
@@ -365,9 +380,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             const SizedBox(width: 16),
             Expanded(
               child: Text(title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w500)),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.grey.shade400),
           ],
         ),
       ),

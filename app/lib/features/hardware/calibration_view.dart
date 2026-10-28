@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../services/ble_service.dart';
+import '../settings/settings_provider.dart';
 
 class CalibrationView extends ConsumerStatefulWidget {
   const CalibrationView({super.key});
@@ -14,7 +16,7 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
   int _currentStep = 0;
   bool _isProcessing = false;
   double _calibrationProgress = 0.0;
-  
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -25,7 +27,7 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
       vsync: this,
       duration: const Duration(seconds: 1),
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -60,6 +62,18 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
           _currentStep++;
         }
       });
+
+      if (ref.read(settingsProvider).hapticAlerts) {
+        final pattern = _currentStep == 3
+            ? GloveHapticPattern.doublePulse
+            : GloveHapticPattern.shortPulse;
+        ref.read(bleServiceProvider).sendHaptic(
+              pattern,
+              reason: _currentStep == 3
+                  ? 'Calibration Complete'
+                  : 'Calibration Step $_currentStep Confirmed',
+            );
+      }
     }
   }
 
@@ -72,7 +86,8 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: const Text('Glove Calibration', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Glove Calibration',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -91,7 +106,10 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
                     width: isActive ? 32 : 16,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: isActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                      color: isActive
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -107,7 +125,9 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
                     return FadeTransition(
                       opacity: animation,
                       child: SlideTransition(
-                        position: Tween<Offset>(begin: const Offset(0.05, 0), end: Offset.zero).animate(animation),
+                        position: Tween<Offset>(
+                                begin: const Offset(0.05, 0), end: Offset.zero)
+                            .animate(animation),
                         child: child,
                       ),
                     );
@@ -121,10 +141,12 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isProcessing || _currentStep == 3 ? () => Navigator.pop(context) : _processStep,
+                  onPressed: _isProcessing || _currentStep == 3
+                      ? () => Navigator.pop(context)
+                      : _processStep,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _currentStep == 3 
-                        ? const Color(0xFF10B981) 
+                    backgroundColor: _currentStep == 3
+                        ? const Color(0xFF10B981)
                         : theme.colorScheme.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
@@ -136,11 +158,13 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
                         )
                       : Text(
                           _getButtonText(),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
@@ -153,11 +177,16 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
 
   String _getButtonText() {
     switch (_currentStep) {
-      case 0: return 'Connect Gloves';
-      case 1: return 'Calibrate Open Hand';
-      case 2: return 'Calibrate Fist';
-      case 3: return 'Finish';
-      default: return 'Next';
+      case 0:
+        return 'Connect Gloves';
+      case 1:
+        return 'Calibrate Open Hand';
+      case 2:
+        return 'Calibrate Fist';
+      case 3:
+        return 'Finish';
+      default:
+        return 'Next';
     }
   }
 
@@ -167,7 +196,8 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
         return _buildStepCard(
           key: const ValueKey(0),
           title: 'Pair via Bluetooth',
-          description: 'Turn on your SignKo Gloves and ensure Bluetooth is enabled on your device.',
+          description:
+              'Turn on your SignKo Gloves and ensure Bluetooth is enabled on your device.',
           icon: Icons.bluetooth_searching,
           isDark: isDark,
           theme: theme,
@@ -176,7 +206,8 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
         return _buildStepCard(
           key: const ValueKey(1),
           title: 'Rest Pose',
-          description: 'Hold your hand completely open and relaxed. Keep your fingers straight.',
+          description:
+              'Hold your hand completely open and relaxed. Keep your fingers straight.',
           icon: Icons.pan_tool_outlined,
           isDark: isDark,
           theme: theme,
@@ -186,7 +217,8 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
         return _buildStepCard(
           key: const ValueKey(2),
           title: 'Fist Pose',
-          description: 'Close your hand tightly into a fist. Hold steady until calibration completes.',
+          description:
+              'Close your hand tightly into a fist. Hold steady until calibration completes.',
           icon: Icons.back_hand,
           isDark: isDark,
           theme: theme,
@@ -196,7 +228,8 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
         return _buildStepCard(
           key: const ValueKey(3),
           title: 'Calibration Complete',
-          description: 'Your gloves are successfully calibrated and ready for accurate sign translation!',
+          description:
+              'Your gloves are successfully calibrated and ready for accurate sign translation!',
           icon: Icons.check_circle_outline,
           iconColor: const Color(0xFF10B981),
           isDark: isDark,
@@ -249,24 +282,29 @@ class _CalibrationViewState extends ConsumerState<CalibrationView>
                   CircularProgressIndicator(
                     value: _calibrationProgress,
                     strokeWidth: 8,
-                    backgroundColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
+                    backgroundColor: theme.colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.1),
                     color: theme.colorScheme.primary,
                   ),
                   Center(
-                    child: Icon(icon, size: 48, color: theme.colorScheme.primary),
+                    child:
+                        Icon(icon, size: 48, color: theme.colorScheme.primary),
                   ),
                 ],
               ),
             )
           else
             ScaleTransition(
-              scale: animatePulse ? _pulseAnimation : const AlwaysStoppedAnimation(1.0),
+              scale: animatePulse
+                  ? _pulseAnimation
+                  : const AlwaysStoppedAnimation(1.0),
               child: Container(
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: (iconColor ?? theme.colorScheme.primary).withValues(alpha: 0.1),
+                  color: (iconColor ?? theme.colorScheme.primary)
+                      .withValues(alpha: 0.1),
                 ),
                 child: Icon(
                   icon,

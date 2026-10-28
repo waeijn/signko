@@ -9,6 +9,7 @@ import 'widgets/sign_to_text_panel.dart';
 import '../history/providers/history_provider.dart';
 import '../settings/settings_provider.dart';
 import '../../core/api_service.dart';
+import '../../services/ble_service.dart';
 
 enum TranslationMode { signToText, textToSign }
 
@@ -71,6 +72,14 @@ class _TranslationViewState extends ConsumerState<TranslationView>
     }
 
     final settings = ref.read(settingsProvider);
+
+    // Trigger haptic double-pulse alert on the gloves to notify DHH user of incoming message
+    if (settings.hapticAlerts) {
+      ref.read(bleServiceProvider).sendHaptic(
+            GloveHapticPattern.doublePulse,
+            reason: 'Incoming Speech/Text Translation',
+          );
+    }
 
     FocusScope.of(context).unfocus();
     setState(() {
@@ -155,7 +164,7 @@ class _TranslationViewState extends ConsumerState<TranslationView>
             }
           }
         },
-        onError: (val) => print('onError: $val'),
+        onError: (val) => debugPrint('onError: $val'),
       );
       if (available) {
         setState(() => _isListening = true);
@@ -265,7 +274,7 @@ class _TranslationViewState extends ConsumerState<TranslationView>
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: _currentMode == TranslationMode.signToText
-                            ? SignToTextPanel() // Live simulation panel
+                            ? const SignToTextPanel() // Live simulation panel
                             : Stack(
                                 children: [
                                   Positioned.fill(

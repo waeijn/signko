@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../services/ble_service.dart';
 import '../../gloves/glove_simulator.dart';
 import '../../settings/settings_provider.dart';
 import '../../history/providers/history_provider.dart';
@@ -20,6 +21,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
   final ScrollController _terminalScrollController = ScrollController();
 
   StreamSubscription<GloveSensorData>? _subscription;
+  StreamSubscription<GloveHapticEvent>? _hapticSubscription;
   final List<String> _terminalLines = [];
   String _currentWord = '';
   String _fullSentence = '';
@@ -35,11 +37,20 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
     super.initState();
     _tts.setLanguage('en-US');
     _tts.setSpeechRate(0.45);
+
+    _hapticSubscription =
+        ref.read(bleServiceProvider).hapticEventStream.listen((event) {
+      if (!mounted || !_isRunning) return;
+      _addTerminalLine(
+        '[HAPTIC] TX: ${event.pattern.hexCode} (${event.pattern.label}) -> ${event.reason}',
+      );
+    });
   }
 
   @override
   void dispose() {
     _subscription?.cancel();
+    _hapticSubscription?.cancel();
     _simulator.dispose();
     _tts.stop();
     _terminalScrollController.dispose();
@@ -60,6 +71,14 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
     _addTerminalLine('[SYS] Connected to SignKo ESP32 (Right)');
     _addTerminalLine('[SYS] TinyML model loaded (v1.2.0)');
     _addTerminalLine('[SYS] Stream active. Awaiting sensor data...');
+
+    if (ref.read(settingsProvider).hapticAlerts) {
+      ref.read(bleServiceProvider).sendHaptic(
+            GloveHapticPattern.shortPulse,
+            reason: 'BLE Stream Connected',
+          );
+    }
+
     _addTerminalLine('');
 
     _simulator.start(interval: const Duration(milliseconds: 1200));
@@ -83,7 +102,6 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
         // Space means end of word
         _addTerminalLine(
             '[ML]  CLASSIFY -> WORD_BREAK (conf: ${_confidence.toStringAsFixed(2)})');
-        _addTerminalLine('');
 
         if (_currentWord.isNotEmpty) {
           final completedWord = _currentWord;
@@ -92,8 +110,17 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
             _currentWord = '';
           });
 
-          // TTS: speak the completed word
           final settings = ref.read(settingsProvider);
+
+          // Haptic word confirmation pulse on the gloves
+          if (settings.hapticWordConfirmation) {
+            ref.read(bleServiceProvider).sendHaptic(
+                  GloveHapticPattern.shortPulse,
+                  reason: 'Word Confirmed ("$completedWord")',
+                );
+          }
+
+          // TTS: speak the completed word
           if (settings.speakTranslations) {
             _tts.speak(completedWord);
           }
@@ -107,6 +134,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                 );
           }
         }
+        _addTerminalLine('');
       } else {
         _addTerminalLine(
             '[ML]  CLASSIFY -> "${data.classifiedLetter}" (conf: ${_confidence.toStringAsFixed(2)})');
@@ -212,7 +240,8 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                   Icons.volume_up,
                   color: _fullSentence.isNotEmpty
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      : theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: 0.5),
                   size: 24,
                 ),
                 onPressed: _fullSentence.isNotEmpty
@@ -226,12 +255,17 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
               IconButton(
                 icon: Icon(
                   Icons.refresh,
-                  color: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
+                  color: (_fullSentence.isNotEmpty ||
+                          _currentWord.isNotEmpty ||
+                          _terminalLines.isNotEmpty)
                       ? Colors.red
-                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      : theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: 0.5),
                   size: 24,
                 ),
-                onPressed: (_fullSentence.isNotEmpty || _currentWord.isNotEmpty || _terminalLines.isNotEmpty)
+                onPressed: (_fullSentence.isNotEmpty ||
+                        _currentWord.isNotEmpty ||
+                        _terminalLines.isNotEmpty)
                     ? () {
                         setState(() {
                           _fullSentence = '';
@@ -269,9 +303,9 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
               ],
             ],
           ),
-          
+
           const SizedBox(height: 16), // Space between buttons and text
-          
+
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -286,8 +320,10 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                                 padding: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
                                   color: theme.brightness == Brightness.dark
-                                      ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                                      : theme.colorScheme.primary.withValues(alpha: 0.05),
+                                      ? theme.colorScheme.primary
+                                          .withValues(alpha: 0.1)
+                                      : theme.colorScheme.primary
+                                          .withValues(alpha: 0.05),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -336,7 +372,9 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                         children: [
                           Text(
                             'Spelling: ',
-                            style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: theme.colorScheme.onSurfaceVariant),
                           ),
                           Text(
                             _currentWord,
@@ -356,15 +394,16 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
             ),
           ),
 
-          // Gesture Visual Box & Confidence Bar
           // Gesture Visual Box & Action Control Bar
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  color:
+                      theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [
@@ -423,7 +462,9 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: _isRunning ? confColor : theme.colorScheme.onSurfaceVariant,
+                          color: _isRunning
+                              ? confColor
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -448,10 +489,13 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                     width: 56,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isRunning ? _stopSimulation : _startSimulation,
+                      onPressed:
+                          _isRunning ? _stopSimulation : _startSimulation,
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        backgroundColor: _isRunning ? Colors.red.shade600 : theme.colorScheme.primary,
+                        backgroundColor: _isRunning
+                            ? Colors.red.shade600
+                            : theme.colorScheme.primary,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -459,7 +503,9 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                         ),
                       ),
                       child: Icon(
-                        _isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                        _isRunning
+                            ? Icons.stop_rounded
+                            : Icons.play_arrow_rounded,
                         size: 32,
                       ),
                     ),
@@ -468,7 +514,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
               ],
             ),
           ),
-          
+
           // Full-size Action Button (Hidden when terminal is expanded to save space)
           if (!_isTerminalExpanded) ...[
             const SizedBox(height: 24),
@@ -533,7 +579,8 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                 ? const BorderRadius.vertical(top: Radius.circular(16))
                 : BorderRadius.circular(16),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Row(
                 children: [
                   Icon(Icons.terminal, size: 18, color: Colors.grey.shade400),
@@ -558,7 +605,9 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                           width: 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: _isRunning ? const Color(0xFF10B981) : Colors.grey,
+                            color: _isRunning
+                                ? const Color(0xFF10B981)
+                                : Colors.grey,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -568,7 +617,9 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                             _isRunning ? 'Live • 50 Hz' : 'Offline',
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: _isRunning ? const Color(0xFF10B981) : Colors.grey,
+                              color: _isRunning
+                                  ? const Color(0xFF10B981)
+                                  : Colors.grey,
                               fontSize: 10,
                             ),
                           ),
@@ -625,6 +676,8 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
                           lineColor = Colors.cyanAccent;
                         } else if (line.startsWith('[ML]')) {
                           lineColor = const Color(0xFF10B981); // Emerald Green
+                        } else if (line.startsWith('[HAPTIC]')) {
+                          lineColor = Colors.amberAccent;
                         } else if (line.isEmpty) {
                           return const SizedBox(height: 4);
                         } else {
