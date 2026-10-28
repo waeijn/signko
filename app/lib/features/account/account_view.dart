@@ -13,6 +13,13 @@ class AccountView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final logoutBgColor =
+        isDark ? Colors.red.withValues(alpha: 0.15) : Colors.red.shade50;
+    final logoutTextColor = isDark ? Colors.redAccent : Colors.red.shade700;
+    final logoutBorderColor =
+        isDark ? Colors.red.withValues(alpha: 0.3) : Colors.red.shade200;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,11 +42,14 @@ class AccountView extends ConsumerWidget {
             // Avatar
             CircleAvatar(
               radius: 60,
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              backgroundImage: user?.avatarUrl != null && user!.avatarUrl!.startsWith('data:image')
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundImage: user?.avatarUrl != null &&
+                      user!.avatarUrl!.startsWith('data:image')
                   ? MemoryImage(base64Decode(user.avatarUrl!.split(',').last))
                   : null,
-              child: user?.avatarUrl == null || !user!.avatarUrl!.startsWith('data:image')
+              child: user?.avatarUrl == null ||
+                      !user!.avatarUrl!.startsWith('data:image')
                   ? Text(
                       user != null ? user.name[0].toUpperCase() : '?',
                       style: TextStyle(
@@ -76,8 +86,10 @@ class AccountView extends ConsumerWidget {
             const SizedBox(height: 32),
 
             // Account Options
-            _buildAccountOption(context, Icons.person_outline, 'Edit Profile', onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileView()));
+            _buildAccountOption(context, Icons.person_outline, 'Edit Profile',
+                onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const EditProfileView()));
             }),
             const Divider(),
             _buildAccountOption(
@@ -93,17 +105,29 @@ class AccountView extends ConsumerWidget {
             // Logout Button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       title: const Text('Log Out'),
-                      content: const Text('Are you sure you want to log out?'),
+                      content:
+                          const Text('Are you sure you want to log out?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7),
+                            ),
+                          ),
                         ),
                         TextButton(
                           onPressed: () async {
@@ -117,25 +141,36 @@ class AccountView extends ConsumerWidget {
                               );
                             }
                           },
-                          child: const Text('Log Out',
-                              style: TextStyle(color: Colors.red)),
+                          child: Text(
+                            'Log Out',
+                            style: TextStyle(
+                              color: logoutTextColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.withValues(alpha: 0.1),
-                  foregroundColor: Colors.redAccent,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                icon: Icon(Icons.logout, color: logoutTextColor, size: 20),
+                label: Text(
+                  'Log Out',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: logoutTextColor,
                   ),
                 ),
-                child: const Text(
-                  'Log Out',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: logoutBgColor,
+                  foregroundColor: logoutTextColor,
+                  elevation: 0,
+                  side: BorderSide(color: logoutBorderColor, width: 1.2),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
@@ -146,22 +181,24 @@ class AccountView extends ConsumerWidget {
   }
 
   Widget _buildAccountOption(
-      BuildContext context, IconData icon, String title, {VoidCallback? onTap}) {
+      BuildContext context, IconData icon, String title,
+      {VoidCallback? onTap}) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
       trailing:
           const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       contentPadding: EdgeInsets.zero,
-      onTap: onTap ?? () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$title is coming soon!'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
-      },
+      onTap: onTap ??
+          () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$title is coming soon!'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+            );
+          },
     );
   }
 }
