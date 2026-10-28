@@ -1,0 +1,6 @@
+#ifndef SIGNKO_COMPAT_BLEUTILS_H
+#define SIGNKO_COMPAT_BLEUTILS_H
+
+#include "BLEDevice.h"
+
+#endif // SIGNKO_COMPAT_BLEUTILS_H
