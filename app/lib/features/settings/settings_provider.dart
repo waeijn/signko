@@ -13,6 +13,8 @@ class SettingsState {
   final bool saveHistory;
   final bool isDarkMode;
   final bool showTelemetry;
+  final bool hapticAlerts;
+  final bool hapticWordConfirmation;
   final String? ttsVoice;
 
   SettingsState({
@@ -21,6 +23,8 @@ class SettingsState {
     required this.saveHistory,
     required this.isDarkMode,
     required this.showTelemetry,
+    required this.hapticAlerts,
+    required this.hapticWordConfirmation,
     this.ttsVoice,
   });
 
@@ -30,6 +34,8 @@ class SettingsState {
     bool? saveHistory,
     bool? isDarkMode,
     bool? showTelemetry,
+    bool? hapticAlerts,
+    bool? hapticWordConfirmation,
     String? ttsVoice,
   }) {
     return SettingsState(
@@ -38,6 +44,9 @@ class SettingsState {
       saveHistory: saveHistory ?? this.saveHistory,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       showTelemetry: showTelemetry ?? this.showTelemetry,
+      hapticAlerts: hapticAlerts ?? this.hapticAlerts,
+      hapticWordConfirmation:
+          hapticWordConfirmation ?? this.hapticWordConfirmation,
       ttsVoice: ttsVoice ?? this.ttsVoice,
     );
   }
@@ -53,6 +62,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           saveHistory: prefs.getBool('saveHistory') ?? true,
           isDarkMode: prefs.getBool('isDarkMode') ?? false,
           showTelemetry: prefs.getBool('showTelemetry') ?? false,
+          hapticAlerts: prefs.getBool('hapticAlerts') ?? true,
+          hapticWordConfirmation:
+              prefs.getBool('hapticWordConfirmation') ?? true,
           ttsVoice: prefs.getString('ttsVoice'),
         ));
 
@@ -84,6 +96,16 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   void toggleShowTelemetry(bool value) {
     prefs.setBool('showTelemetry', value);
     state = state.copyWith(showTelemetry: value);
+  }
+
+  void toggleHapticAlerts(bool value) {
+    prefs.setBool('hapticAlerts', value);
+    state = state.copyWith(hapticAlerts: value);
+  }
+
+  void toggleHapticWordConfirmation(bool value) {
+    prefs.setBool('hapticWordConfirmation', value);
+    state = state.copyWith(hapticWordConfirmation: value);
   }
 }
 

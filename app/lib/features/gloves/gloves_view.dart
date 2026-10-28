@@ -1,11 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/ble_service.dart';
 import '../hardware/calibration_view.dart';
 
-class GlovesView extends StatelessWidget {
+class GlovesView extends ConsumerWidget {
   const GlovesView({super.key});
 
+  void _triggerTestHaptic(
+    BuildContext context,
+    WidgetRef ref,
+    GloveHapticPattern pattern,
+  ) {
+    ref.read(bleServiceProvider).sendHaptic(
+          pattern,
+          reason: 'Hardware Test Panel',
+        );
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Sent ${pattern.label} (${pattern.hexCode}) to connected gloves',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -75,6 +100,66 @@ class GlovesView extends StatelessWidget {
           _buildDeviceTile(
               context, 'SignKo ESP32 (Right)', 'Connected', Colors.green),
           const SizedBox(height: 32),
+          // Haptic Feedback Test Section
+          const Text(
+            'Haptic Feedback Test',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Send a test vibration pulse to verify the glove actuators.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildHapticTestButton(
+                  context,
+                  label: 'Short',
+                  subtitle: '100ms',
+                  icon: Icons.vibration,
+                  onTap: () => _triggerTestHaptic(
+                    context,
+                    ref,
+                    GloveHapticPattern.shortPulse,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildHapticTestButton(
+                  context,
+                  label: 'Double',
+                  subtitle: '2x 150ms',
+                  icon: Icons.notifications_active_outlined,
+                  onTap: () => _triggerTestHaptic(
+                    context,
+                    ref,
+                    GloveHapticPattern.doublePulse,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildHapticTestButton(
+                  context,
+                  label: 'Alert',
+                  subtitle: '500ms',
+                  icon: Icons.warning_amber_rounded,
+                  onTap: () => _triggerTestHaptic(
+                    context,
+                    ref,
+                    GloveHapticPattern.longAlert,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
           // Pair Button
           SizedBox(
             width: double.infinity,
@@ -99,6 +184,54 @@ class GlovesView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHapticTestButton(
+    BuildContext context, {
+    required String label,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color:
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

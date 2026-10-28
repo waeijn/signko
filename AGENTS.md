@@ -27,6 +27,7 @@ description: General guidelines and best practices for the workspace
 - Follow Conventional Commits format (e.g., `feat:`, `fix:`, `docs:`, `chore:`).
 - Write concise but descriptive commit messages.
 - Keep commits focused on a single logical change.
+- Base branch is always `dev`. Never commit or push directly to `main` without confirmation.
 
 ## Tech-Specific Guidelines
 

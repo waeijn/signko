@@ -1,0 +1,6 @@
+#ifndef SIGNKO_COMPAT_BLE2902_H
+#define SIGNKO_COMPAT_BLE2902_H
+
+#include "BLEDevice.h"
+
+#endif // SIGNKO_COMPAT_BLE2902_H
