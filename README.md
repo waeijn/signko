@@ -97,8 +97,8 @@ To gracefully shut down the backend and clean up, run:
 ## App Navigation & Usage
 
 1. **Hardware Calibration:** Navigate to the **Hardware** tab (or Settings) and tap **Pair & Calibrate Gloves**. This launches a 4-step interactive flow to connect the ESP32 gloves via Bluetooth and calibrate the flex sensors (Rest Pose vs. Fist Pose).
-2. **Sign-to-Text Mode:** In the **Translation** tab, select the "Sign to Text" toggle. Tap the play button to start listening to glove telemetry. Recognized FSL gestures will appear on screen and can be spoken aloud via TTS.
-3. **Text-to-Sign Mode:** Switch to the "Text to Sign" toggle. Type a phrase or tap the microphone to use Speech-to-Text. The app will query the backend and render the corresponding FSL video clip or fingerspelling sequence.
+2. **Gesture-to-Text Mode:** In the **Translation** tab, select the "Gesture to Text" toggle. Tap the play button to start listening to glove telemetry. Recognized FSL gestures will appear on screen and can be spoken aloud via TTS.
+3. **Text-to-Gesture Mode:** Switch to the "Text to Gesture" toggle. Type a phrase or tap the microphone to use Speech-to-Text. The app will query the backend and render the corresponding FSL video clip or fingerspelling sequence.
 
 ## Supported FSL Dataset
 

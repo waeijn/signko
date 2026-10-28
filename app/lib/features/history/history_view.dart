@@ -188,7 +188,8 @@ class HistoryView extends ConsumerWidget {
 
   Widget _buildHistoryItem(BuildContext context, String original,
       String translated, String mode, String time) {
-    final isSignToText = mode == 'Sign to Text';
+    final isGestureToText =
+        mode == 'Gesture to Text' || mode == 'Sign to Text';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -204,12 +205,14 @@ class HistoryView extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isSignToText ? Colors.blue.shade50 : Colors.purple.shade50,
+              color: isGestureToText
+                  ? Colors.blue.shade50
+                  : Colors.purple.shade50,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              isSignToText ? Icons.back_hand : Icons.chat_bubble_outline,
-              color: isSignToText ? Colors.blue : Colors.purple,
+              isGestureToText ? Icons.back_hand : Icons.chat_bubble_outline,
+              color: isGestureToText ? Colors.blue : Colors.purple,
               size: 20,
             ),
           ),

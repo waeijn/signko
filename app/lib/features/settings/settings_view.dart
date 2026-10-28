@@ -200,7 +200,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             settingsNotifier.toggleSaveHistory(v);
           }),
           _buildSwitchTile(
-              context, 'Auto-translate Sign to Text', settings.autoTranslate,
+              context, 'Auto-translate Gesture to Text', settings.autoTranslate,
               (v) {
             settingsNotifier.toggleAutoTranslate(v);
           }),

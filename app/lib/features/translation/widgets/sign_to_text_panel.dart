@@ -130,7 +130,7 @@ class _SignToTextPanelState extends ConsumerState<SignToTextPanel> {
             ref.read(historyProvider.notifier).addHistory(
                   completedWord,
                   'Spoken English',
-                  'Sign to Text',
+                  'Gesture to Text',
                 );
           }
         }

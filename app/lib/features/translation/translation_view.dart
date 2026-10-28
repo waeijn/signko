@@ -11,7 +11,7 @@ import '../settings/settings_provider.dart';
 import '../../core/api_service.dart';
 import '../../services/ble_service.dart';
 
-enum TranslationMode { signToText, textToSign }
+enum TranslationMode { gestureToText, textToGesture }
 
 class TranslationView extends ConsumerStatefulWidget {
   const TranslationView({super.key});
@@ -22,7 +22,7 @@ class TranslationView extends ConsumerStatefulWidget {
 
 class _TranslationViewState extends ConsumerState<TranslationView>
     with SingleTickerProviderStateMixin {
-  TranslationMode _currentMode = TranslationMode.signToText;
+  TranslationMode _currentMode = TranslationMode.gestureToText;
   final TextEditingController _textController = TextEditingController();
   late stt.SpeechToText _speech;
   bool _isListening = false;
@@ -90,12 +90,12 @@ class _TranslationViewState extends ConsumerState<TranslationView>
     });
 
     if (settings.saveHistory) {
-      final modeStr = _currentMode == TranslationMode.textToSign
-          ? 'Text to Sign'
-          : 'Sign to Text';
+      final modeStr = _currentMode == TranslationMode.textToGesture
+          ? 'Text to Gesture'
+          : 'Gesture to Text';
       ref.read(historyProvider.notifier).addHistory(
           text,
-          modeStr == 'Text to Sign' ? 'FSL Translation' : 'Spoken English',
+          modeStr == 'Text to Gesture' ? 'FSL Translation' : 'Spoken English',
           modeStr);
     }
 
@@ -232,22 +232,22 @@ class _TranslationViewState extends ConsumerState<TranslationView>
                   Expanded(
                     child: _buildToggleButton(
                       context: context,
-                      title: 'Sign to Text',
+                      title: 'Gesture to Text',
                       icon: Icons.back_hand,
-                      isActive: _currentMode == TranslationMode.signToText,
+                      isActive: _currentMode == TranslationMode.gestureToText,
                       onTap: () => setState(
-                          () => _currentMode = TranslationMode.signToText),
+                          () => _currentMode = TranslationMode.gestureToText),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildToggleButton(
                       context: context,
-                      title: 'Text to Sign',
+                      title: 'Text to Gesture',
                       icon: Icons.chat_bubble_outline,
-                      isActive: _currentMode == TranslationMode.textToSign,
+                      isActive: _currentMode == TranslationMode.textToGesture,
                       onTap: () => setState(
-                          () => _currentMode = TranslationMode.textToSign),
+                          () => _currentMode = TranslationMode.textToGesture),
                     ),
                   ),
                 ],
@@ -273,7 +273,7 @@ class _TranslationViewState extends ConsumerState<TranslationView>
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
-                        child: _currentMode == TranslationMode.signToText
+                        child: _currentMode == TranslationMode.gestureToText
                             ? const SignToTextPanel() // Live simulation panel
                             : Stack(
                                 children: [
@@ -318,8 +318,8 @@ class _TranslationViewState extends ConsumerState<TranslationView>
                 ),
               ),
             ),
-            // Bottom Input Field (Only in Text to Sign mode)
-            if (_currentMode == TranslationMode.textToSign)
+            // Bottom Input Field (Only in Text to Gesture mode)
+            if (_currentMode == TranslationMode.textToGesture)
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Container(
