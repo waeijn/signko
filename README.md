@@ -103,6 +103,7 @@ To gracefully shut down the backend and clean up, run:
 ## Supported FSL Dataset
 
 SignKo supports an official bilingual Filipino Sign Language (FSL) dataset covering:
+
 - **Alphabet (26 Letters):** Complete fingerspelling sequence (Aa to Zz) rendered as dynamic character cards.
 - **Numbers (1 to 10):** Numeric digits, English words (`one` to `ten`), and Filipino words (`isa` to `sampu`).
 - **Words and Phrases (30 Bilingual Entries):** Conversational signs covering greetings, questions, courtesies, school/home terminology, and common phrases in both English and Filipino (Tagalog).
@@ -116,9 +117,30 @@ For the full list of database query keys, Filipino translations, and media asset
 3. Connect the ESP32 board via USB.
 4. Build and upload the firmware using the PlatformIO interface. Ensure the correct COM port is selected.
 
-## Contributing
+## Git Workflow & Contributing
 
-Please refer to the [`AGENTS.md`](./AGENTS.md) file for general workspace guidelines, code quality expectations, and commit message conventions.
+SignKo follows a two-tier branching model:
+
+- **`dev`**: Primary active integration branch. All feature branches, bugfixes, and daily development commits must target `dev`.
+- **`main`**: Production-ready branch. Releases are merged from `dev` into `main` after verification.
+
+### Quick Start: Updating Your Local Environment
+
+```bash
+# 1. Switch to dev and pull the latest changes
+git checkout dev
+git pull origin dev
+
+# 2. Create a feature branch
+git checkout -b feat/your-feature-name
+
+# 3. Commit using Conventional Commits
+git commit -m "feat: description of work"
+```
+
+For complete instructions on stashing uncommitted work, syncing feature branches with `dev`, resolving Flutter generated file conflicts, and post-pull setup, refer to the [Development Runbook](RUNBOOK.md#git-workflow--updating-local-repository).
+
+Please refer to [`AGENTS.md`](./AGENTS.md) for general workspace guidelines, code quality expectations, and commit message conventions.
 
 ## License
 

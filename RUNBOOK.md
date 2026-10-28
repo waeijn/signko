@@ -13,15 +13,125 @@ If your app starts acting weird, lagging heavily, or throwing network errors, fo
 
 2. **Start the Environment**
    Run the automated start script to boot the Docker backend, clean the Flutter cache, and launch the app:
+
    ```bash
    .\start_all.ps1
    ```
 
 3. **(Optional) Seed the Database**
    Since the database volume persists, you usually only need to run this once. If you wiped your volumes, run this to recreate the default user and dictionary:
+
    ```bash
    .\seed_db.ps1
    ```
+
+## Git Workflow & Updating Local Repository
+
+### Branch Strategy
+
+- **`main`**: Production and release-ready code. Never commit directly to `main`.
+- **`dev`**: Primary active integration branch. All developers base their work and feature branches here.
+- **`feat/*` or `fix/*`**: Temporary feature and bugfix branches cut from `dev`.
+
+### 1. Daily Sync (Updating Your Local `dev`)
+
+Before starting any new work or creating a new branch, always synchronize your local machine with remote changes:
+
+```bash
+# 1. Switch to dev branch
+git checkout dev
+
+# 2. Pull the latest commits from GitHub
+git pull origin dev
+```
+
+If you have uncommitted local changes that you want to preserve while pulling:
+
+```bash
+# Temporarily stash your local changes
+git stash
+
+# Pull the latest remote updates
+git pull origin dev
+
+# Re-apply your changes on top of latest code
+git stash pop
+```
+
+### 2. Feature Development Workflow
+
+```bash
+# 1. Ensure dev is up-to-date
+git checkout dev
+git pull origin dev
+
+# 2. Create your feature branch
+git checkout -b feat/your-feature-name
+
+# 3. Make changes and commit using Conventional Commits
+git add .
+git commit -m "feat: implement feature description"
+
+# 4. Push your branch to GitHub
+git push -u origin feat/your-feature-name
+```
+
+### 3. Syncing Your Active Feature Branch with Remote `dev`
+
+If `dev` was updated by team members while you were working on your feature branch:
+
+```bash
+# Fetch latest remote references
+git fetch origin
+
+# Merge latest dev changes into your feature branch
+git merge origin/dev
+```
+
+### 4. Merging into `dev` and Releasing to `main`
+
+```bash
+# 1. Merge feature branch to dev
+git checkout dev
+git pull origin dev
+git merge feat/your-feature-name
+git push origin dev
+
+# 2. Release dev to main (when ready for a verified stable release)
+git checkout main
+git pull origin main
+git merge dev
+git push origin main
+git checkout dev
+```
+
+### 5. Common Git Issues & Quick Fixes
+
+#### Issue: Flutter Generated Files Block `git checkout` or `git pull`
+
+Flutter builds often modify platform registrant files (e.g. `app/windows/flutter/generated_plugin_registrant.cc`, `generated_plugins.cmake`).
+**Fix:** Discard modifications in generated folders before pulling:
+
+```bash
+git restore app/windows/flutter/ app/linux/flutter/ app/macos/Flutter/
+```
+
+#### Issue: After Pulling, Code Crashes or Fails to Build
+
+When dependencies or database schemas are updated:
+
+```powershell
+# 1. If Flutter packages changed
+cd app
+flutter pub get
+cd ..
+
+# 2. If Backend models, endpoints, or requirements changed
+docker compose restart backend
+
+# 3. If Dictionary mappings or database seeds were updated
+.\seed_db.ps1
+```
 
 ## Known Quirks & Fixes
 
