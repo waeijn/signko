@@ -48,9 +48,10 @@ SignKo is a wearable hardware and mobile software ecosystem designed to facilita
 signko/
 ├── embedded/                       # ESP32 firmware and hardware configuration
 │   ├── compat/                     # VS Code IntelliSense mock headers for local dev
-│   ├── include/                    # Project C++ header files (haptics, SDK compatibility)
+│   ├── include/                    # Project C++ header files (sensors, TinyML, BLE, haptics)
 │   ├── lib/signko_inferencing/     # Edge Impulse TinyML exported library
-│   ├── src/                        # Main C++ source files (BLE, sensors, haptics)
+│   ├── scripts/                    # PlatformIO build and flash automation scripts
+│   ├── src/                        # Main C++ source files (sensors, TinyML, BLE, haptics)
 │   ├── test/                       # Unit and hardware integration tests
 │   └── platformio.ini              # Build and dependency settings
 ├── backend/                        # FastAPI Python backend & Database

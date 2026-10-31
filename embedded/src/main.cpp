@@ -1,85 +1,54 @@
 #include "haptics.h"
+#include "sensors.h"
+#include "tinyml_pipeline.h"
+#include "ble_pipeline.h"
 
-// BLE GATT UUIDs for SignKo Glove Service
-#define SIGNKO_SERVICE_UUID        "0000ffe0-0000-1000-8000-00805f9b34fb"
-#define SIGNKO_TELEMETRY_CHAR_UUID "0000ffe1-0000-1000-8000-00805f9b34fb"
-#define SIGNKO_HAPTIC_CHAR_UUID    "0000ffe2-0000-1000-8000-00805f9b34fb"
+// Callback triggered whenever the TinyML engine recognizes a sign gesture
+static void onGestureDetected(const char* gestureLabel, float confidence) {
+    Serial.print("[GESTURE] Recognized: ");
+    Serial.print(gestureLabel);
+    Serial.print(" | Conf: ");
+    Serial.println(confidence);
 
-static BLEServer* pServer = nullptr;
-static BLECharacteristic* pTelemetryCharacteristic = nullptr;
-static bool deviceConnected = false;
+    // 1. Dispatch over Bluetooth Low Energy to the Flutter mobile app
+    notifyGesture(gestureLabel, confidence);
 
-class SignKoServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer* server) override {
-        (void)server;
-        deviceConnected = true;
-        // Brief pulse on BLE connection
-        triggerHaptic(HAPTIC_SHORT_PULSE);
-    }
-
-    void onDisconnect(BLEServer* server) override {
-        deviceConnected = false;
-        // Alert pulse on BLE disconnection, then restart advertising
-        triggerHaptic(HAPTIC_LONG_ALERT);
-        server->startAdvertising();
-    }
-};
-
-class HapticCharacteristicCallbacks : public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic* pCharacteristic) override {
-        std::string value = pCharacteristic->getValue();
-        if (!value.empty()) {
-            uint8_t cmd = static_cast<uint8_t>(value[0]);
-            switch (cmd) {
-                case HAPTIC_OFF:
-                case HAPTIC_SHORT_PULSE:
-                case HAPTIC_DOUBLE_PULSE:
-                case HAPTIC_LONG_ALERT:
-                    triggerHaptic(static_cast<HapticPattern>(cmd));
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-};
+    // 2. Provide tactile confirmation pulse on the glove
+    triggerHaptic(HAPTIC_SHORT_PULSE);
+}
 
 void setup() {
     Serial.begin(115200);
+    delay(200); // Settling delay for Serial monitor
+
+    Serial.println("==========================================");
+    Serial.println("        SignKo ESP32 Smart Glove         ");
+    Serial.println("==========================================");
+
+    // 1. Initialize vibration actuator GPIO & FreeRTOS worker queue
     initHaptics();
 
-    BLEDevice::init("SignKo ESP32 Glove");
-    pServer = BLEDevice::createServer();
-    pServer->setCallbacks(new SignKoServerCallbacks());
+    // 2. Initialize ADC pins for 5 resistive flex sensors & IMU I2C bus
+    initSensors();
 
-    BLEService* pService = pServer->createService(SIGNKO_SERVICE_UUID);
+    // 3. Initialize sliding-window time-series buffer and TinyML inference task
+    initTinyMLPipeline(onGestureDetected);
 
-    // Telemetry & TinyML Gesture Classification Characteristic (Notify)
-    pTelemetryCharacteristic = pService->createCharacteristic(
-        SIGNKO_TELEMETRY_CHAR_UUID,
-        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
-    );
-    pTelemetryCharacteristic->addDescriptor(new BLE2902());
+    // 4. Initialize Bluetooth Low Energy GATT Server and advertising
+    initBLEPipeline();
 
-    // Haptic Feedback Control Characteristic (Write / Write Without Response)
-    BLECharacteristic* pHapticCharacteristic = pService->createCharacteristic(
-        SIGNKO_HAPTIC_CHAR_UUID,
-        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR
-    );
-    pHapticCharacteristic->setCallbacks(new HapticCharacteristicCallbacks());
-
-    pService->start();
-
-    BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SIGNKO_SERVICE_UUID);
-    pAdvertising->setScanResponse(true);
-    pAdvertising->setMinPreferred(0x06);
-    BLEDevice::startAdvertising();
-
-    Serial.println("[SYS] SignKo BLE Server & Haptics initialized.");
+    Serial.println("[SYS] All pipelines online. Starting sensor sampling loop...");
 }
 
 void loop() {
-    // Sensor acquisition and Edge Impulse TinyML inference run on non-blocking intervals
-    vTaskDelay(pdMS_TO_TICKS(50));
+    SensorSample sample;
+
+    // Read flex sensor ADC values and IMU orientation
+    if (readSensorSample(sample)) {
+        // Feed time-series frame into the non-blocking TinyML sliding window
+        enqueueSensorSample(sample);
+    }
+
+    // Run at 50 Hz sampling frequency (20ms non-blocking interval)
+    vTaskDelay(pdMS_TO_TICKS(20));
 }

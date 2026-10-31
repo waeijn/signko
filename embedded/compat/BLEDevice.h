@@ -32,6 +32,9 @@ public:
     void addDescriptor(BLEDescriptor*) {}
     void setCallbacks(BLECharacteristicCallbacks*) {}
     std::string getValue() { return ""; }
+    void setValue(const std::string&) {}
+    void setValue(uint8_t*, size_t) {}
+    void notify() {}
 };
 
 class BLEService {
