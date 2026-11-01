@@ -2,6 +2,15 @@
 
 SignKo is a wearable hardware and mobile software ecosystem designed to facilitate real-time, bidirectional communication between Deaf and hard-of-hearing (DHH) Filipino Sign Language (FSL) users and non-signing hearing individuals. The system utilizes ESP32-based sensor gloves to recognize FSL gestures and a Flutter-based mobile application to process text, audio, and visual FSL media.
 
+## Research Objectives
+
+1. **Dual Wearable Sensor Gloves (Gesture to Text):** To design dual wearable sensor gloves that can recognize predefined Filipino Sign Language (FSL) gestures and translate them into text.
+2. **Mobile Application Output Display:** To develop a mobile application that displays the translated text output received from the dual wearable sensor gloves.
+3. **Virtual Sign Language Interpreter (Text to Gesture):** To develop a mobile application that converts typed input into Filipino Sign Language (FSL) using a virtual sign language interpreter.
+4. **System Evaluation (ISO/IEC 25010:2023):** To evaluate the developed portable two-way Filipino Sign Language (FSL) communication system in accordance with ISO/IEC 25010:2023, specifically in terms of **Appropriateness Recognizability**, **Learnability**, **Operability**, and **Inclusivity**.
+
+For the complete breakdown of technical metrics (Accuracy, Precision, Recall, F1-Score, End-to-End BLE Latency) and ISO/IEC 25010:2023 Interaction Capability evaluation criteria, refer to the [Research Objectives & System Evaluation Framework](docs/evaluation_metrics.md).
+
 ## Key Features
 
 - **FSL to Text and Speech:** The wearable gloves capture finger flexion and hand orientation data. An embedded TinyML model classifies the data into FSL letters and numbers, transmitting the results via Bluetooth Low Energy (BLE) to the mobile application for text display and Text-to-Speech (TTS) output.
@@ -61,6 +70,9 @@ signko/
 │   ├── assets/                     # .png and .mp4 files for FSL media
 │   ├── lib/                        # Dart source code (Features, UI, Services)
 │   └── pubspec.yaml                # Flutter dependencies
+├── docs/                           # System documentation, dataset reference, and ISO metrics
+│   ├── evaluation_metrics.md       # Research objectives and ISO/IEC 25010:2023 framework
+│   └── fsl_vocabulary.md           # Supported bilingual FSL vocabulary and media mapping
 ├── docker-compose.yml              # Orchestrates FastAPI and PostgreSQL containers
 └── ml_pipeline/                    # Raw sensor datasets and Python data processing scripts
 ```
@@ -148,4 +160,4 @@ Please refer to [`AGENTS.md`](./AGENTS.md) for general workspace guidelines, cod
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is developed as an academic thesis and research prototype. All rights reserved by the authors.

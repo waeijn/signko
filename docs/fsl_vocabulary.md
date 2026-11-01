@@ -6,7 +6,7 @@ This document outlines the official Filipino Sign Language (FSL) dataset support
 
 ## Translation Architecture & Media Fallback
 
-SignKo uses a tiered resolution system for Text-to-Sign translation:
+SignKo uses a tiered resolution system for Text-to-Gesture translation:
 
 1. **Exact Dictionary Match (Video):**
    * The backend queries PostgreSQL for full phrases or words.
