@@ -19,6 +19,6 @@ public:
     int read() { return 0; }
 };
 
-static TwoWire Wire;
+[[maybe_unused]] static TwoWire Wire;
 
 #endif // SIGNKO_COMPAT_WIRE_H

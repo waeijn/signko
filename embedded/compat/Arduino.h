@@ -43,6 +43,6 @@ struct HardwareSerialStub {
     void println(float) {}
     void printf(const char*, ...) {}
 };
-static HardwareSerialStub Serial;
+[[maybe_unused]] static HardwareSerialStub Serial;
 
 #endif // SIGNKO_COMPAT_ARDUINO_H
