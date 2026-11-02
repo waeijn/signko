@@ -158,3 +158,50 @@ docker compose restart backend
 - **Issue:** Switching tabs on the Dashboard causes the UI to freeze or stutter.
 - **Cause:** Rebuilding heavy widgets (like `TranslationView`) from scratch triggers "Shader Compilation Jank" and TTS collisions on Web.
 - **Fix:** We wrapped the Dashboard tabs in an `IndexedStack` (in `dashboard_view.dart`) so they stay alive in memory.
+
+
+## Embedded Firmware Development & Troubleshooting
+
+The firmware runs on the **ESP32-S3-N16R8** microcontroller and is located in the `embedded/` directory.
+
+### 1. Essential Commands
+
+```powershell
+# Run the automated native unit & integration test suite (16 tests)
+.\embedded\scripts\test.ps1
+
+# Build the firmware targeting ESP32-S3-N16R8 (esp32-s3-devkitc-1)
+.\embedded\scripts\build.ps1
+
+# Clean previous build artifacts and recompile
+.\embedded\scripts\build.ps1 -Clean
+
+# Flash to the ESP32-S3 board (auto-detects COM port)
+.\embedded\scripts\flash.ps1
+
+# Flash to a specific COM port and open the 115200 baud serial monitor
+.\embedded\scripts\flash.ps1 -Port COM3 -Monitor
+```
+
+### 2. Embedded Quirks & Hardware Troubleshooting
+
+#### A. Board Fails to Connect / Flashing Hangs on "Connecting..."
+- **Cause:** The ESP32-S3 USB CDC interface is in an active execution loop and needs to be put into download boot mode.
+- **Fix:**
+  1. Press and **hold** the physical **BOOT** button (GPIO 0).
+  2. Momentarily tap the **RST / EN** button.
+  3. Release the **BOOT** button.
+  4. Run `.\embedded\scripts\flash.ps1` again. Once flashing completes, press **RST** once to reboot into normal execution.
+
+#### B. Multiple USB Type-C Ports on the Core Board
+- **Cause:** The UICPAL ESP32-S3-N16R8 development board provides two USB Type-C ports: **USB** (native USB OTG/CDC on GPIOs 19/20) and **UART** (via onboard USB-to-UART bridge).
+- **Fix:** Either port can be used, but ensure `ARDUINO_USB_CDC_ON_BOOT=1` in `platformio.ini` is preserved so `Serial` output prints over native USB.
+
+#### C. Fatal Boot Crash: Flash / PSRAM Pin Collisions
+- **Issue:** Board enters an infinite boot loop printing `Flash read err` or `PSRAM ID mismatch`.
+- **Cause:** External peripherals (e.g. sensors, jumpers) were connected to **GPIOs 26–37**.
+- **Fix:** On the **N16R8** variant, GPIOs 26–32 are permanently wired to the 16MB Quad SPI Flash and GPIOs 33–37 to the 8MB Octal SPI PSRAM. Never attach jumpers to these pins. Connect flex sensors to **ADC1 (GPIOs 1, 4, 5, 6, 7)** and MPU-6050 to **GPIOs 8/9**.
+
+#### D. Bench Testing Without Physical Sensors Connected
+- **Behavior:** The firmware will print `[SENSORS] ESP32-S3 ADC1 flex array initialized (MPU-6050 not detected; using fallback)`.
+- **Note:** This is normal during development. The firmware features automatic fallback telemetry ($a_z = 9.8\text{ m/s}^2$) so BLE streaming and TinyML buffer pipelines remain functional for end-to-end mobile testing even before hardware assembly.

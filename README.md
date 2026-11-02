@@ -64,7 +64,8 @@ signko/
 │   ├── scripts/                    # PlatformIO build, flash, and test automation scripts
 │   ├── src/                        # Main C++ source files (sensors, TinyML, BLE, haptics)
 │   ├── test/                       # Unit and hardware integration tests
-│   └── platformio.ini              # Build and dependency settings (ESP32-S3-N16R8)
+│   ├── platformio.ini              # Build and dependency settings (ESP32-S3-N16R8)
+│   └── README.md                   # Firmware architecture and quick-start guide
 ├── backend/                        # FastAPI Python backend & Database
 │   ├── app/                        # API routes, schemas, models, and scripts
 │   └── Dockerfile                  # Containerization for backend
@@ -75,7 +76,8 @@ signko/
 ├── docs/                           # System documentation, dataset reference, and ISO metrics
 │   ├── evaluation_metrics.md       # Research objectives and ISO/IEC 25010:2023 framework
 │   ├── fsl_vocabulary.md           # Supported bilingual FSL vocabulary and media mapping
-│   └── hardware_specs.md           # Complete BOM, electrical specs, and ESP32-S3 pinout
+│   ├── hardware_specs.md           # Complete BOM, electrical specs, and ESP32-S3 pinout
+│   └── wiring_guide.md             # Pin-to-pin interconnect table and circuit schematic
 ├── docker-compose.yml              # Orchestrates FastAPI and PostgreSQL containers
 └── ml_pipeline/                    # Raw sensor datasets and Python data processing scripts
 ```
