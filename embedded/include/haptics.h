@@ -3,9 +3,10 @@
 
 #include "sdk_compat.h"
 
-// GPIO driving the N-channel MOSFET gate for the 3V coin vibration motor
+// ESP32-S3-N16R8 GPIO driving the MOSFET gate on the 5V Vibration Module (23mm x 20.8mm, 9000 RPM, 60-90mA)
+// Module VCC is supplied by the 5.0V output of the Mini DC-to-DC Boost Converter.
 #ifndef HAPTIC_PIN
-#define HAPTIC_PIN 23
+#define HAPTIC_PIN 14
 #endif
 
 enum HapticPattern : uint8_t {

@@ -18,9 +18,18 @@
 #define INPUT  0x00
 #endif
 
+typedef enum {
+    ADC_0db   = 0,
+    ADC_2_5db = 1,
+    ADC_6db   = 2,
+    ADC_11db  = 3
+} adc_attenuation_t;
+
 inline void pinMode(uint8_t, uint8_t) {}
 inline void digitalWrite(uint8_t, uint8_t) {}
 inline int analogRead(uint8_t) { return 2048; }
+inline void analogReadResolution(uint8_t) {}
+inline void analogSetAttenuation(adc_attenuation_t) {}
 inline unsigned long millis() { return 0; }
 inline void delay(unsigned long) {}
 

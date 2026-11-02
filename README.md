@@ -1,6 +1,6 @@
 # SignKo: Bidirectional Filipino Sign Language Translation System
 
-SignKo is a wearable hardware and mobile software ecosystem designed to facilitate real-time, bidirectional communication between Deaf and hard-of-hearing (DHH) Filipino Sign Language (FSL) users and non-signing hearing individuals. The system utilizes ESP32-based sensor gloves to recognize FSL gestures and a Flutter-based mobile application to process text, audio, and visual FSL media.
+SignKo is a wearable hardware and mobile software ecosystem designed to facilitate real-time, bidirectional communication between Deaf and hard-of-hearing (DHH) Filipino Sign Language (FSL) users and non-signing hearing individuals. The system utilizes ESP32-S3-based sensor gloves to recognize FSL gestures and a Flutter-based mobile application to process text, audio, and visual FSL media.
 
 ## Research Objectives
 
@@ -16,23 +16,25 @@ For the complete breakdown of technical metrics (Accuracy, Precision, Recall, F1
 - **FSL to Text and Speech:** The wearable gloves capture finger flexion and hand orientation data. An embedded TinyML model classifies the data into FSL letters and numbers, transmitting the results via Bluetooth Low Energy (BLE) to the mobile application for text display and Text-to-Speech (TTS) output.
 - **Speech/Text to FSL Video/Image:** Non-signers can input text or use the device microphone via Speech-to-Text (STT). The application maps this input to a stored video or image database, playing the corresponding FSL gesture media on the screen.
 - **Haptic Alerts:** The mobile application triggers a vibration motor on the glove to notify the DHH user of incoming messages or detected speech.
-- **Edge Processing:** Gesture classification runs entirely on the ESP32 microcontroller using Edge Impulse, ensuring low latency and reduced power consumption by transmitting lightweight string data rather than raw sensor streams.
+- **Edge Processing:** Gesture classification runs entirely on the ESP32-S3 microcontroller using Edge Impulse, ensuring low latency and reduced power consumption by transmitting lightweight string data rather than raw sensor streams.
 - **Offline Functionality:** Core STT, TTS, and rendering engines utilize on-device libraries, allowing the system to operate without an active internet connection.
 
 ## Tech Stack
 
 ### Hardware & Embedded Systems
 
-- **Microcontroller:** ESP32 Development Boards (one per glove) for sensor acquisition, processing, and wireless transmission.
-- **Sensors:** Resistive Flex Sensors (finger bend angles) and MPU-6050 / BNO085 IMUs (hand spatial orientation).
-- **Actuators:** 3V Coin Vibration Motors (haptic feedback for incoming messages).
-- **Firmware Environment:** PlatformIO utilizing C/C++.
-- **Wireless Protocol:** Bluetooth Low Energy (BLE) configured as a GATT server.
+- **Microcontroller:** **ESP32-S3-N16R8** (`ESP32-S3-WROOM-1` SoC, 16MB Quad SPI Flash, 8MB Octal SPI PSRAM, 44-Pin, Dual USB Type-C) — one per glove.
+- **Flex Sensors:** **Spectra Symbol `FS-L-0055-253-ST`** 2.2" Resistive Flex Sensors (25 kΩ flat to 45 kΩ–125 kΩ bent; 5 per glove on ESP32-S3 ADC1).
+- **Inertial Measurement Unit (IMU):** **TDK InvenSense `MPU-6050`** (`GY-521` breakout, 6-axis 16-bit Accelerometer & Gyroscope over 400 kHz I²C at `0x68`).
+- **Haptic Actuator:** **5.0V DC Vibration Motor Module** (9,000 RPM min, 3.0V–5.3V operating range, up to 60–90 mA, 23mm × 20.8mm).
+- **Power & Charging Subsystem:** **1500mAh 3.7V 1S Li-Po Battery** (5.55Wh) charged via a **TP4056 USB Type-C Module** (with overcharge/discharge protection) and stepped up via a **Mini DC-to-DC Boost Converter (5.0V)** (see [Hardware Specifications & Wiring Reference](docs/hardware_specs.md)).
+- **Firmware Environment:** PlatformIO utilizing C/C++ (`esp32-s3-devkitc-1`, `qio_opi`).
+- **Wireless Protocol:** Bluetooth Low Energy (BLE 5.0) configured as a GATT server.
 
 ### Machine Learning (TinyML)
 
 - **Development Platform:** Edge Impulse for data collection, feature extraction, and model training.
-- **Deployment Format:** Optimized C++ library running inference directly on the ESP32 (Edge AI) to eliminate cloud latency.
+- **Deployment Format:** Optimized C++ library running inference directly on the ESP32-S3 (Edge AI) to eliminate cloud latency.
 - **Model Type:** **1D Convolutional Neural Network (1D CNN)** optimized for spatial-temporal time-series sensor data from the gloves.
 
 ### Mobile Application (Frontend)
@@ -55,14 +57,14 @@ For the complete breakdown of technical metrics (Accuracy, Precision, Recall, F1
 
 ```text
 signko/
-├── embedded/                       # ESP32 firmware and hardware configuration
+├── embedded/                       # ESP32-S3 firmware and hardware configuration
 │   ├── compat/                     # VS Code IntelliSense mock headers for local dev
 │   ├── include/                    # Project C++ header files (sensors, TinyML, BLE, haptics)
 │   ├── lib/signko_inferencing/     # Edge Impulse TinyML exported library
 │   ├── scripts/                    # PlatformIO build and flash automation scripts
 │   ├── src/                        # Main C++ source files (sensors, TinyML, BLE, haptics)
 │   ├── test/                       # Unit and hardware integration tests
-│   └── platformio.ini              # Build and dependency settings
+│   └── platformio.ini              # Build and dependency settings (ESP32-S3-N16R8)
 ├── backend/                        # FastAPI Python backend & Database
 │   ├── app/                        # API routes, schemas, models, and scripts
 │   └── Dockerfile                  # Containerization for backend
@@ -72,7 +74,8 @@ signko/
 │   └── pubspec.yaml                # Flutter dependencies
 ├── docs/                           # System documentation, dataset reference, and ISO metrics
 │   ├── evaluation_metrics.md       # Research objectives and ISO/IEC 25010:2023 framework
-│   └── fsl_vocabulary.md           # Supported bilingual FSL vocabulary and media mapping
+│   ├── fsl_vocabulary.md           # Supported bilingual FSL vocabulary and media mapping
+│   └── hardware_specs.md           # Complete BOM, electrical specs, and ESP32-S3 pinout
 ├── docker-compose.yml              # Orchestrates FastAPI and PostgreSQL containers
 └── ml_pipeline/                    # Raw sensor datasets and Python data processing scripts
 ```
@@ -112,7 +115,7 @@ To gracefully shut down the backend and clean up, run:
 
 ## App Navigation & Usage
 
-1. **Hardware Calibration:** Navigate to the **Hardware** tab (or Settings) and tap **Pair & Calibrate Gloves**. This launches a 4-step interactive flow to connect the ESP32 gloves via Bluetooth and calibrate the flex sensors (Rest Pose vs. Fist Pose).
+1. **Hardware Calibration:** Navigate to the **Hardware** tab (or Settings) and tap **Pair & Calibrate Gloves**. This launches a 4-step interactive flow to connect the ESP32-S3 gloves via Bluetooth and calibrate the flex sensors (Rest Pose vs. Fist Pose).
 2. **Gesture-to-Text Mode:** In the **Translation** tab, select the "Gesture to Text" toggle. Tap the play button to start listening to glove telemetry. Recognized FSL gestures will appear on screen and can be spoken aloud via TTS.
 3. **Text-to-Gesture Mode:** Switch to the "Text to Gesture" toggle. Type a phrase or tap the microphone to use Speech-to-Text. The app will query the backend and render the corresponding FSL video clip or fingerspelling sequence.
 
@@ -130,8 +133,8 @@ For the full list of database query keys, Filipino translations, and media asset
 
 1. Navigate to the `embedded/` directory.
 2. Open the project in Visual Studio Code with the PlatformIO extension installed.
-3. Connect the ESP32 board via USB.
-4. Build and upload the firmware using the PlatformIO interface. Ensure the correct COM port is selected.
+3. Connect the **ESP32-S3-N16R8** board via USB Type-C.
+4. Build and upload the firmware using the PlatformIO interface (`.\embedded\scripts\build.ps1` / `.\embedded\scripts\flash.ps1`). Ensure the correct COM port is selected.
 
 ## Git Workflow & Contributing
 

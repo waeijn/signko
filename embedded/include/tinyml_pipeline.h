@@ -6,7 +6,8 @@
 // Time-series feature shape for Edge Impulse 1D CNN
 #define TINYML_FEATURES_PER_FRAME 11 // 5 flex + 3 accel + 3 gyro
 #define TINYML_SAMPLE_RATE_HZ     50 // 50 Hz = 20ms per frame
-#define TINYML_WINDOW_FRAMES      50 // 50 frames = 1000ms time window
+#define TINYML_WINDOW_FRAMES      50 // 50 frames = 1000ms sliding window
+#define TINYML_STRIDE_FRAMES      10 // Run inference every 10 frames (200ms / 5 Hz stride)
 #define TINYML_BUFFER_SIZE        (TINYML_FEATURES_PER_FRAME * TINYML_WINDOW_FRAMES)
 
 // Classification confidence threshold to filter out uncertain noise
