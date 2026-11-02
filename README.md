@@ -61,7 +61,7 @@ signko/
 │   ├── compat/                     # VS Code IntelliSense mock headers for local dev
 │   ├── include/                    # Project C++ header files (sensors, TinyML, BLE, haptics)
 │   ├── lib/signko_inferencing/     # Edge Impulse TinyML exported library
-│   ├── scripts/                    # PlatformIO build and flash automation scripts
+│   ├── scripts/                    # PlatformIO build, flash, and test automation scripts
 │   ├── src/                        # Main C++ source files (sensors, TinyML, BLE, haptics)
 │   ├── test/                       # Unit and hardware integration tests
 │   └── platformio.ini              # Build and dependency settings (ESP32-S3-N16R8)
