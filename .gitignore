@@ -31,6 +31,7 @@ ios/Flutter/.last_build_id
 *.bin
 *.elf
 *.hex
+embedded/test/bin/
 
 # Python (ML Pipeline)
 __pycache__/

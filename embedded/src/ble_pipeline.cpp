@@ -36,6 +36,17 @@ class HapticCharacteristicCallbacks : public BLECharacteristicCallbacks {
                 case HAPTIC_LONG_ALERT:
                     triggerHaptic(static_cast<HapticPattern>(cmd));
                     break;
+
+                case CMD_CALIBRATE_OPEN_HAND:
+                    calibrateOpenHand();
+                    triggerHaptic(HAPTIC_SHORT_PULSE);
+                    break;
+
+                case CMD_CALIBRATE_FIST:
+                    calibrateFist();
+                    triggerHaptic(HAPTIC_DOUBLE_PULSE);
+                    break;
+
                 default:
                     break;
             }
@@ -57,7 +68,7 @@ void initBLEPipeline() {
     );
     pTelemetryCharacteristic->addDescriptor(new BLE2902());
 
-    // Haptic Feedback Control Characteristic (Write / Write Without Response)
+    // Haptic Feedback & Calibration Control Characteristic (Write / Write Without Response)
     pHapticCharacteristic = pService->createCharacteristic(
         SIGNKO_HAPTIC_CHAR_UUID,
         BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR

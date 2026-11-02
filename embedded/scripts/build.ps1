@@ -44,7 +44,7 @@ try {
         & $PioCmd run --target clean
     }
 
-    Write-Host "[BUILD] Compiling ESP32 firmware target (esp32dev)..." -ForegroundColor Green
+    Write-Host "[BUILD] Compiling ESP32-S3-N16R8 firmware target (esp32-s3-devkitc-1)..." -ForegroundColor Green
     & $PioCmd run
 
     if ($LASTEXITCODE -eq 0) {

@@ -9,6 +9,10 @@
 #include <Arduino.h>
 #endif
 
+#if __has_include(<Wire.h>)
+#include <Wire.h>
+#endif
+
 #if __has_include(<freertos/FreeRTOS.h>)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>

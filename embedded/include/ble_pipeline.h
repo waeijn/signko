@@ -8,7 +8,13 @@
 #define SIGNKO_TELEMETRY_CHAR_UUID "0000ffe1-0000-1000-8000-00805f9b34fb"
 #define SIGNKO_HAPTIC_CHAR_UUID    "0000ffe2-0000-1000-8000-00805f9b34fb"
 
-// Initializes the ESP32 BLE GATT Server and advertising
+// BLE Control Command Bytes (in addition to HapticPattern 0x00 - 0x03)
+enum GloveControlCommand : uint8_t {
+    CMD_CALIBRATE_OPEN_HAND = 0x10, // Triggers calibrateOpenHand() + short pulse confirmation
+    CMD_CALIBRATE_FIST      = 0x11  // Triggers calibrateFist() + double pulse confirmation
+};
+
+// Initializes the ESP32-S3 BLE GATT Server and advertising
 void initBLEPipeline();
 
 // Returns true if a central device (e.g. Flutter mobile app) is connected
