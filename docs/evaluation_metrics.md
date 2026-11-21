@@ -21,7 +21,7 @@ This document defines the research objectives of the SignKo portable two-way Fil
 
 ### 1. Gesture Recognition & Sensor Performance (Objective 1)
 
-Evaluates hardware sensor reliability and Edge Impulse 1D-CNN TinyML classification performance across the predefined FSL dataset (26 Alphabet letters, Numbers 1–10, and 30 bilingual Words/Phrases):
+Evaluates hardware sensor reliability and Edge Impulse 1D-CNN TinyML classification performance across the predefined FSL dataset (26 Alphabet letters, Numbers 1–10, and 20 bilingual Words/Phrases, totaling 56 FSL classes):
 
 - **Classification Accuracy (`%`):** Ratio of correctly classified FSL gestures to total attempted gestures across test trials.
   $$\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN} \times 100\%$$
