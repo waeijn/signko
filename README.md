@@ -123,11 +123,11 @@ To gracefully shut down the backend and clean up, run:
 
 ## Supported FSL Dataset
 
-SignKo supports an official bilingual Filipino Sign Language (FSL) dataset covering:
+SignKo supports an official bilingual Filipino Sign Language (FSL) dataset covering 56 total vocabulary entries:
 
 - **Alphabet (26 Letters):** Complete fingerspelling sequence (Aa to Zz) rendered as dynamic character cards.
 - **Numbers (1 to 10):** Numeric digits, English words (`one` to `ten`), and Filipino words (`isa` to `sampu`).
-- **Words and Phrases (30 Bilingual Entries):** Conversational signs covering greetings, questions, courtesies, school/home terminology, and common phrases in both English and Filipino (Tagalog).
+- **Words and Phrases (20 Bilingual Entries):** Conversational signs covering greetings, questions, courtesies, and common daily interactions in both English and Filipino (Tagalog).
 
 For the full list of database query keys, Filipino translations, and media asset paths, refer to the [FSL Vocabulary & Dataset Reference](docs/fsl_vocabulary.md).
 

@@ -19,7 +19,7 @@ SignKo uses a tiered resolution system for Text-to-Gesture translation:
 
 ---
 
-## 1. FSL Words and Phrases (30 Items)
+## 1. FSL Words and Phrases (20 Items)
 
 Each entry supports both English and Filipino inputs, as well as colloquial and space-condensed variants.
 
@@ -32,29 +32,19 @@ Each entry supports both English and Filipino inputs, as well as colloquial and 
 | 5 | Take Care | Ingat ka | `take care`, `takecare`, `ingat ka`, `ingatka`, `ingat` | `assets/videos/take_care.mp4` |
 | 6 | Sick | May sakit | `sick`, `may sakit`, `maysakit` | `assets/videos/sick.mp4` |
 | 7 | Invent | Imbento | `invent`, `imbento` | `assets/videos/invent.mp4` |
-| 8 | House | Bahay | `house`, `bahay` | `assets/videos/house.mp4` |
-| 9 | Read | Basa | `read`, `basa` | `assets/videos/read.mp4` |
-| 10 | Again | Ulit | `again`, `ulit` | `assets/videos/again.mp4` |
-| 11 | Why? | Bakit? | `why`, `why?`, `bakit`, `bakit?` | `assets/videos/why.mp4` |
-| 12 | Where? | Saan? | `where`, `where?`, `saan`, `saan?` | `assets/videos/where.mp4` |
-| 13 | Which? | Alin? | `which`, `which?`, `alin`, `alin?` | `assets/videos/which.mp4` |
-| 14 | Friend | Kaibigan | `friend`, `kaibigan` | `assets/videos/friend.mp4` |
-| 15 | Who? | Sino? | `who`, `who?`, `sino`, `sino?` | `assets/videos/who.mp4` |
-| 16 | Sweetheart | Sweetheart | `sweetheart` | `assets/videos/sweetheart.mp4` |
-| 17 | Yes | Oo | `yes`, `oo` | `assets/videos/yes.mp4` |
-| 18 | No | Hindi | `no`, `hindi` | `assets/videos/no.mp4` |
-| 19 | I'm Sorry | Pasensya na | `im sorry`, `i'm sorry`, `imsorry`, `sorry`, `pasensya na`, `pasensyana`, `pasensya` | `assets/videos/sorry.mp4` |
-| 20 | When? | Kailan? | `when`, `when?`, `kailan`, `kailan?` | `assets/videos/when.mp4` |
-| 21 | I understand | Naiintindihan ko | `i understand`, `iunderstand`, `naiintindihan ko`, `naiintindihanko` | `assets/videos/i_understand.mp4` |
-| 22 | I'm going home | Uwi na ako | `im going home`, `i'm going home`, `imgoinghome`, `uwi na ako`, `uwinaako` | `assets/videos/im_going_home.mp4` |
-| 23 | I don't understand | Hindi ko naiintindihan | `i dont understand`, `i don't understand`, `idontunderstand`, `hindi ko naiintindihan`, `hindikonaiintindihan` | `assets/videos/i_dont_understand.mp4` |
-| 24 | Lecture | Lektyur | `lecture`, `lektyur` | `assets/videos/lecture.mp4` |
-| 25 | School | Paaralan | `school`, `paaralan` | `assets/videos/school.mp4` |
-| 26 | I don't care | Wala akong pakialam | `i dont care`, `i don't care`, `idontcare`, `wala akong pakialam`, `walaakongpakialam` | `assets/videos/i_dont_care.mp4` |
-| 27 | I Love You | Mahal kita | `i love you`, `iloveyou`, `mahal kita`, `mahalkita` | `assets/videos/i_love_you.mp4` |
-| 28 | Book | Aklat | `book`, `aklat` | `assets/videos/book.mp4` |
-| 29 | I Hate You | Galit ako sayo | `i hate you`, `ihateyou`, `galit ako sayo`, `galitakosayo` | `assets/videos/i_hate_you.mp4` |
-| 30 | Please | Paki | `please`, `paki` | `assets/videos/please.mp4` |
+| 8 | Read | Basa | `read`, `basa` | `assets/videos/read.mp4` |
+| 9 | Again | Ulit | `again`, `ulit` | `assets/videos/again.mp4` |
+| 10 | Why? | Bakit? | `why`, `why?`, `bakit`, `bakit?` | `assets/videos/why.mp4` |
+| 11 | Where? | Saan? | `where`, `where?`, `saan`, `saan?` | `assets/videos/where.mp4` |
+| 12 | Which? | Alin? | `which`, `which?`, `alin`, `alin?` | `assets/videos/which.mp4` |
+| 13 | Yes | Oo | `yes`, `oo` | `assets/videos/yes.mp4` |
+| 14 | No | Hindi | `no`, `hindi` | `assets/videos/no.mp4` |
+| 15 | I'm Sorry | Pasensya na | `im sorry`, `i'm sorry`, `imsorry`, `sorry`, `pasensya na`, `pasensyana`, `pasensya` | `assets/videos/sorry.mp4` |
+| 16 | I understand | Naiintindihan ko | `i understand`, `iunderstand`, `naiintindihan ko`, `naiintindihanko` | `assets/videos/i_understand.mp4` |
+| 17 | I don't understand | Hindi ko naiintindihan | `i dont understand`, `i don't understand`, `idontunderstand`, `hindi ko naiintindihan`, `hindikonaiintindihan` | `assets/videos/i_dont_understand.mp4` |
+| 18 | I Love You | Mahal kita | `i love you`, `iloveyou`, `mahal kita`, `mahalkita` | `assets/videos/i_love_you.mp4` |
+| 19 | Book | Aklat | `book`, `aklat` | `assets/videos/book.mp4` |
+| 20 | Please | Paki | `please`, `paki` | `assets/videos/please.mp4` |
 
 ---
 
