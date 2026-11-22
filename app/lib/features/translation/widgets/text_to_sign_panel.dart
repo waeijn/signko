@@ -26,7 +26,7 @@ class TextToSignPanel extends StatefulWidget {
 class _TextToSignPanelState extends State<TextToSignPanel> {
   int _selectedWordIndex = -1; // -1 means [All]
 
-  // Official list of 30 FSL words and phrases (both English and Filipino) plus numbers
+  // Official list of 20 FSL words and phrases (both English and Filipino) plus numbers
   final List<String> _dynamicVocabulary = [
     // 1. Good Day (Magandang Araw)
     'good day', 'goodday', 'magandang araw', 'magandangaraw',
@@ -42,51 +42,31 @@ class _TextToSignPanelState extends State<TextToSignPanel> {
     'sick', 'may sakit', 'maysakit',
     // 7. Invent (Imbento)
     'invent', 'imbento',
-    // 8. House (Bahay)
-    'house', 'bahay',
-    // 9. Read (Basa)
+    // 8. Read (Basa)
     'read', 'basa',
-    // 10. Again (Ulit)
+    // 9. Again (Ulit)
     'again', 'ulit',
-    // 11. Why? (Bakit?)
+    // 10. Why? (Bakit?)
     'why', 'bakit',
-    // 12. Where? (Saan?)
+    // 11. Where? (Saan?)
     'where', 'saan',
-    // 13. Which? (Alin?)
+    // 12. Which? (Alin?)
     'which', 'alin',
-    // 14. Friend (Kaibigan)
-    'friend', 'kaibigan',
-    // 15. Who? (Sino?)
-    'who', 'sino',
-    // 16. Sweetheart
-    'sweetheart',
-    // 17. Yes (Oo)
+    // 13. Yes (Oo)
     'yes', 'oo',
-    // 18. No (Hindi)
+    // 14. No (Hindi)
     'no', 'hindi',
-    // 19. I\'m Sorry (Pasensya na)
+    // 15. I\'m Sorry (Pasensya na)
     'im sorry', 'i\'m sorry', 'imsorry', 'sorry', 'pasensya na', 'pasensyana', 'pasensya',
-    // 20. When? (Kailan?)
-    'when', 'kailan',
-    // 21. I understand (Naiintindihan ko)
+    // 16. I understand (Naiintindihan ko)
     'i understand', 'iunderstand', 'naiintindihan ko', 'naiintindihanko',
-    // 22. I\'m going home (Uwi na ako)
-    'im going home', 'i\'m going home', 'imgoinghome', 'uwi na ako', 'uwinaako',
-    // 23. I don\'t understand (Hindi ko naiintindihan)
+    // 17. I don\'t understand (Hindi ko naiintindihan)
     'i dont understand', 'i don\'t understand', 'idontunderstand', 'hindi ko naiintindihan', 'hindikonaiintindihan',
-    // 24. Lecture (Lektyur)
-    'lecture', 'lektyur',
-    // 25. School (Paaralan)
-    'school', 'paaralan',
-    // 26. I don\'t care (Wala akong pakialam)
-    'i dont care', 'i don\'t care', 'idontcare', 'wala akong pakialam', 'walaakongpakialam',
-    // 27. I Love You (Mahal kita)
+    // 18. I Love You (Mahal kita)
     'i love you', 'iloveyou', 'mahal kita', 'mahalkita',
-    // 28. Aklat (Book)
+    // 19. Aklat (Book)
     'book', 'aklat',
-    // 29. I Hate You (Galit ako sayo)
-    'i hate you', 'ihateyou', 'galit ako sayo', 'galitakosayo',
-    // 30. Please (Paki)
+    // 20. Please (Paki)
     'please', 'paki',
     // Numbers 1 to 10
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
