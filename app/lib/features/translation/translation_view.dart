@@ -9,6 +9,7 @@ import 'widgets/sign_to_text_panel.dart';
 import '../history/providers/history_provider.dart';
 import '../settings/settings_provider.dart';
 import '../../core/api_service.dart';
+import '../../core/local_fsl_dictionary.dart';
 import '../../services/ble_service.dart';
 
 enum TranslationMode { gestureToText, textToGesture }
@@ -132,16 +133,21 @@ class _TranslationViewState extends ConsumerState<TranslationView>
               'Successfully loaded $mediaType from database: ${mediaPath ?? mediaSequence}');
         }
       } else {
-        throw Exception('Failed to translate');
+        throw Exception('Server returned ${response.statusCode}');
       }
     } catch (e) {
+      debugPrint('Backend unavailable ($e). Resolving with local offline dictionary...');
+      final localResult = LocalFslDictionary.translate(text);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error connecting to backend: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _mediaPath = localResult.mediaPath;
+          _mediaType = localResult.mediaType;
+          _mediaSequence = localResult.mediaSequence;
+          _isTranslating = false;
+          _showVideoMock = true;
+        });
+        debugPrint(
+            'Offline local resolution complete: ${localResult.mediaPath ?? localResult.mediaSequence}');
       }
     } finally {
       if (mounted) {
